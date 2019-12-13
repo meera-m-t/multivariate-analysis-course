@@ -1,0 +1,228 @@
+---
+title: "Homework-1"
+header-includes:
+  - \usepackage{lscape}
+  - \usepackage[english]{babel}
+  - \usepackage{multicol}
+  - \usepackage{here}
+  - \usepackage[version=3]{mhchem}
+  - \setlength{\columnsep}{1cm}
+  - \setlength{\parindent}{1cm} # paragraph indentation
+  - \setlength{\parskip}{8pt} # paragraph spacing
+  - \usepackage{setspace}
+  - \doublespacing
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+  word_document: default
+classoption: fleqn
+---
+
+```{r}
+#setwd("~/Desktop/")
+```
+
+# Question-1
+
+```{r}
+data=read.table("data.txt",header=T)
+head(data)
+```
+
+# a)
+```{r}
+#The means for each column,Note there is no mean for the date clome because it is not numerical column 
+x=data[,2:3]
+colMeans(x)
+```
+
+
+```{r}
+# the covariance matrix
+cat("the covariance matrix is : \n")
+cov(x)
+```
+
+```{r}
+# the correlation matrix
+cat("the correlation  matrix is : \n")
+cor(x)
+```
+
+
+```{r}
+# you can specific the type of correlation method "pearson", "kendall", "spearman"
+pg=x$pg; sp=x$sp
+cor(pg,sp,method="kendall")
+```
+
+
+```{r}
+# the summary
+summary(x)
+```
+
+
+# b)
+
+
+```{r}
+pairs(date~.,data=data,col=data$date)
+```
+
+
+```{r}
+#installed.packages("carData")
+#install.packages("car")
+library(carData)
+library(car)
+
+
+scatterplotMatrix(x, diagonal=list(method="density"
+),
+regLine = list(method=lm, lty=1,
+lwd=2,col="red"), smooth=list(smoother=loessLine, spread=TRUE,
+lty.smooth=1, lwd.smooth=1.5, lty.spread=3, lwd.spread=1),main="Scatterplot Matrix")
+```
+
+
+
+```{r}
+#install.packages("GGally")
+library(ggplot2)
+library(GGally)
+ggpairs(x)
+```
+
+```{r}
+scatterplotMatrix( ~ pg +sp , data=data, diagonal=list(method="boxplot" ) ,
+regLine = list(method=lm, lty=1,
+lwd=2,col="red"), smooth=list(smoother=loessLine, spread=TRUE,
+lty.smooth=1, lwd.smooth=1.5, lty.spread=3, lwd.spread=.5),main="Scatterplot Matrix")
+```
+
+
+
+```{r}
+## Two-dimensional density estimation via kernel smoothing
+library(MASS)
+den1 <- kde2d(pg, sp,n=60)
+persp(den1$x,den1$y,den1$z, xlab="pg", ylab="sp", zlab="Density", theta= 30, col=rainbow(15))
+```
+
+
+```{r}
+#Create a bivariate density - Contour plot
+plot(pg, sp)
+contour(den1$x, den1$y, den1$z, lwd=2, nlevels=15, add=T, col=rainbow(15))
+```
+
+
+
+
+# Summary : 
+There is a mild positive correlation ($\rho$ = 0.503) between pg and sp variables. As you notice we cannot recognize the effect  of the different decades in column ("date") on sp and pg. 
+
+
+
+
+# c)
+
+# method-1
+
+```{r}
+# add new colum "year" to the dataset 
+data1=data
+data1$year=NA
+data1$year=substr(data$date, 1, 4)
+data1$year <- as.numeric(data1$year)
+y<-split(data, cut(data1$year, c(1961, 1970, 1980, 1990,2000,2010), include.lowest=TRUE))
+```
+
+
+
+```{r}
+# classify the data into five decades by adding class column
+data1$decades=cut(data1$year, c(1961, 1970, 1980, 1990, 2000, 2010), include.lowest = TRUE)
+data1$decades <- as.numeric(data1$decades )
+data1$decades=cut(data1$year, c(1961, 1970, 1980, 1990, 2000, 2010), include.lowest = TRUE)
+data1$decades <- as.numeric(data1$decades )
+head(data1)
+```
+
+
+
+
+
+```{r}
+attach(data1)
+pairs(decades~., data=data1[,2:3], col=data1$decades)
+```
+
+
+
+
+```{r}
+library(lattice)
+library(caret)
+xyplot( pg ~ sp |decades, data = data1,layout=c(3,2), col=c(2,5))
+```
+
+
+```{r}
+parallelplot(~data1[,2:3]|data1[,5], data = data1, layout = c(5,1))
+```
+# method-2
+```{r}
+#since each decade has 120 rows (our dataset equally divided)
+# creat a new column with the labels
+n=120
+dec=c(rep("dec1",n),rep("dec2",n),rep("dec3",n),rep("dec4",n),rep("dec5",n))
+decades<-as.factor(dec)
+data=data.frame(data,decades)
+head(data)
+```
+
+
+
+```{r}
+pairs(
+decades~., data=data[,2:3], col=data$decades)
+```
+
+
+
+```{r}
+#install.packages("lattice")
+#install.packages('caret', dependencies = TRUE)
+library(lattice)
+library(caret)
+x <- data[,2:3]
+y <- data[,4]
+scales <- list(x=list(relation="free"), y=list(relation="free"))
+featurePlot(x=x, y=y, plot="density", scales=scales,
+layout = c(2, 1),
+auto.key = list(columns = 4))
+```
+
+```{r}
+x <- data[,2:3]
+y <- data[,4]
+featurePlot(x=x, y=y, plot="box")
+```
+
+```{r}
+xyplot( pg ~ sp |decades, data = data,layout=c(3,2), col=c(2,4))
+```
+
+
+```{r}
+parallelplot(~data[,2:3]|data[,4], data = data, layout = c(5,1))
+```
+
+
+***********************************************************************************************************************************
+
+
+

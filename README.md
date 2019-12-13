@@ -1,5 +1,5 @@
 ## Multivariate Statistics
-This repository contains solution the Homework of Multivariate Analysis Course using R-code.I provide the Homeworks' questions for 7 chapters and the solution for each chapter as the following:
+This repository contains solution the Homework of Multivariate Analysis Course using R-code  in an R markdown (.Rmd) file.I provide the Homeworks' questions covered  10 chapters in the text book and the solution as the following:
 
 1. Multivariate-Analysis visualization
 2. Data, Covariance, and Correlation Matrix
