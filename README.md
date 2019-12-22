@@ -1,8 +1,8 @@
 ## Multivariate Statistics
 This repository contains solution the Homework of Multivariate Analysis Course using R-code  in an R markdown (.Rmd) file.I provide the Homeworks' questions covered  10 chapters in the text book and the solution as the following:
 
-1. Multivariate-Analysis visualization
-2. Data, Covariance, and Correlation Matrix
+1. Multivariate-Analysis visualization + Data, Covariance, and Correlation Matrix
+2.univarite and Multivariate Normality Tests
 3. Multivariate Normal Distribution 
 4. Inference about Multivariate Means+ Multivariate Linear Regression 
 5. Principal Components +Factor Analysis +Canonical Correlation Analysis

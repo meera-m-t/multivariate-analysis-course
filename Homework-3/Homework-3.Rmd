@@ -1,0 +1,414 @@
+---
+title: "Homework-3"
+header-includes:
+  - \usepackage{lscape}
+  - \usepackage[english]{babel}
+  - \usepackage{multicol}
+  - \usepackage{here}
+  - \usepackage[version=3]{mhchem}
+  - \setlength{\columnsep}{1cm}
+  - \setlength{\parindent}{1cm} # paragraph indentation
+  - \setlength{\parskip}{8pt} # paragraph spacing
+  - \usepackage{setspace}
+  - \doublespacing
+output:
+  html_document:
+    df_print: paged
+  word_document: default
+  pdf_document: default
+classoption: fleqn
+---
+
+
+
+```{r}
+#setwd("~/Desktop/r-583")
+```
+
+
+##  Question-3
+
+## a)
+
+```{r}
+S= matrix(c(0.0144, 0.0117,0.0117, 0.0146),nrow=2,ncol=2,byrow = TRUE)
+xbar= c(0.564, 0.603)
+n=32
+SigmaHat=(n-1)/n*S
+SigmaHat
+```
+
+
+
+## b)
+
+```{r}
+Sinv=solve(S)
+eigen(S)
+```
+
+
+
+```{r}
+# cval <- qf(level, p, n-p)*p*(n-1) / (n-p)
+cval <- qf(0.95, 2,30)*2* 31 / 30
+cval
+```
+
+
+```{r,include=FALSE}
+#install.packages("car")
+library(car)
+```
+
+
+```{r}
+#tconst <- sqrt((p/n)*((n-1)/(n-p)) * qf(0.99,p,n-p))
+tconst <- sqrt((2/32)*((31)/(30)) * qf(0.95,2, 30))
+plot(ellipse(center=xbar, shape=S, radius=tconst, draw=F), col="blue", type = "l",lwd=2, xlab=expression(mu[1]), ylab=expression(mu[2]))
+points( 0.564, 0.603, col = "blue", lwd=2)
+text(0.56, 0.603, expression(bar(x)))
+points( .6, .58, col = "red", lwd=2)
+text(.6, .575, expression(mu[0]))
+legend("topleft", expression(R[1]) )
+```
+
+
+
+## c)
+
+```{r}
+32*(199.05)*(0.564- 0.6)^2 + 32*(196.32)*(0.603 -0.58)^2-
+64* (159.51)*(0.564- 0.6)*(0.603-0.58) <= 6.852
+```
+
+
+```{r}
+mu0=c(0.6, 0.58)
+m=xbar-mu0
+a=32*t(m)%*%solve(S)%*%m
+a
+```
+
+```{r}
+b= (2*((31)/(30)) * qf(0.95,2, 30))
+b
+```
+
+## d)
+
+```{r}
+a1=c(1,0)
+a2=c(0,1)
+tconst <- sqrt((2)*((31)/(30)) * qf(0.95,2, 30))
+mgre1= sqrt(t(a1)%*% S%*% a1/ 32)
+mgre2=sqrt(t(a2)%*% S%*% a2/ 32)
+# CI for mu1:
+c(t(a1)%*% xbar - tconst* mgre1, t(a1)%*% xbar + tconst* mgre1 )
+```
+
+
+
+```{r}
+# CI for mu2:
+c(t(a2)%*% xbar - tconst* mgre2, t(a2)%*% xbar + tconst* mgre2 )
+```
+
+
+```{r}
+#install.packages("car")
+library(car)
+#tconst <- sqrt((p/n)*((n-1)/(n-p)) * qf(0.99,p,n-p))
+tconst <- sqrt((2/32)*((31)/(30)) * qf(0.95,2, 30))
+plot(ellipse(center=xbar, shape=S, radius=tconst, draw=F), col="blue", type = "l",
+lwd=2, xlab=expression(mu[1]), ylab=expression(mu[2]), xlim=c(.47, .65), ylim=c(.51, .68))
+points( 0.564, 0.603, col = "blue", lwd=2)
+text(0.56, 0.603, expression(bar(x)))
+points( .6, .58, col = "red", lwd=2)
+text(.6, .575, expression(mu[0]))
+legend("topleft", c(expression(R[1]), expression(R[2]) ), lty=c(1,1), col = c(1,2) )
+#abline( h=0.5470844 , h=0.5084687:0.6195313 )
+segments(0.5084687 , 0.5470844, 0.6195313, 0.5470844, col="red" , lwd=2)
+segments(0.5084687 , 0.6589156, 0.6195313, 0.6589156, col="red" , lwd=2)
+segments(0.5084687 , 0.5470844, 0.5084687, 0.6589156, col="red" , lwd=2)
+segments(0.6195313 , 0.5470844,0.6195313, 0.6589156, col="red" , lwd=2)
+```
+
+
+
+
+## e)
+```{r}
+p=2;n=32
+d <- xbar-mu0
+Sinv=solve(S)
+t2 <- n*t(d)%*% Sinv%*%d;
+t2mod <- (n-p)*t2/(p*(n-1))
+pval <- 1- pf(t2mod,p,n-p)
+cat("F-Statistics","Hotelling T-squared statistic", "p-value", fill=T)
+```
+
+
+```{r}
+c(t2mod, t2, pval)
+```
+
+
+
+## Question-4
+
+
+## d)
+
+```{r}
+a1=c(1,0)
+a2=c(0,1)
+tconst <- -qt(0.05/4, 31)
+mgre1= sqrt(t(a1)%*% S%*% a1/ 32)
+mgre2=sqrt(t(a2)%*% S%*% a2/ 32)
+# CI for mu1:
+c(t(a1)%*% xbar - tconst* mgre1, t(a1)%*% xbar + tconst* mgre1 )
+```
+
+
+
+```{r}
+# CI for mu2:
+c(t(a2)%*% xbar - tconst* mgre2, t(a2)%*% xbar + tconst* mgre2 )
+```
+
+
+
+
+
+## e)
+
+
+```{r}
+#install.packages("car")
+library(car)
+#tconst <- sqrt((p/n)*((n-1)/(n-p)) * qf(0.99,p,n-p))
+tconst <- sqrt((2/32)*((31)/(30)) * qf(0.95,2, 30))
+plot(ellipse(center=xbar, shape=S, radius=tconst, draw=F), col="blue", type = "l",
+lwd=2, xlab=expression(mu[1]), ylab=expression(mu[2]), xlim=c(.47, .65), ylim=c(.51, .68))
+points( 0.564, 0.603, col = "blue", lwd=2)
+text(0.56, 0.603, expression(bar(x)))
+points( .6, .58, col = "red", lwd=2)
+text(.6, .575, expression(mu[0]))
+legend("topleft", c(expression(R[1]), expression(R[2]), expression(R[3]) ), lty=c(1,1))
+#abline( h=0.5470844 , h=0.5084687:0.6195313 )
+segments(0.5084687 , 0.5470844, 0.6195313, 0.5470844, col="red" , lwd=2)
+segments(0.5084687 , 0.6589156, 0.6195313, 0.6589156, col="red" , lwd=2)
+segments(0.5084687 , 0.5470844, 0.5084687, 0.6589156, col="red" , lwd=2)
+segments(0.6195313 , 0.5470844,0.6195313, 0.6589156, col="red" , lwd=2)
+segments(0.5140309 , 0.552685, 0.6139691, 0.552685, col="purple" , lwd=2)
+segments(0.5140309 ,0.653315, 0.6139691, 0.653315, col="purple" , lwd=2)
+segments(0.5140309 , 0.552685 , 0.5140309, 0.653315, col="purple" , lwd=2)
+segments(0.6139691 , 0.552685 , 0.6139691, 0.653315, col="purple" , lwd=2)
+
+```
+
+
+
+## Question-5
+
+```{r}
+Data <- read.table("three-stocks.txt", head=T)
+```
+
+```{r}
+# The following function is for QQ plot of chi-square
+qqchi2 <- function(da){
+if(!is.matrix(da))da=as.matrix(da)
+nr=dim(da)[1]
+nc=dim(da)[2]
+dev=scale(da,center=T,scale=F)
+dev=as.matrix(dev)
+s=cov(da)
+si=solve(s)
+d2=sort(diag(dev%*%si%*%t(dev)))
+prob=(c(1:nr)-0.5)/nr
+q1=qchisq(prob,nc)
+plot(q1,d2,xlab='Quantile of chi-square',ylab= expression(d^2), lwd=2, cex.lab=1.2 )
+fit=lsfit(q1,d2)
+fitted=d2-fit$residuals
+lines(q1,fitted,col="blue", lwd=2)
+rq=cor(q1,d2)
+cat("correlation coefficient:",rq,"\n")
+}
+qqchi2(Data)
+```
+
+
+```{r,include=FALSE}
+# -Mardia's multivariate tests
+library(QuantPsyc)
+```
+
+```{r}
+mult.norm(Data[,2:4],chicrit=0.001)$mult.test
+```
+
+## b)
+
+```{r}
+#install.packages("DescTools")
+library(DescTools)
+```
+
+
+```{r}
+HotellingsT2Test(Data[,2:7],test="chi")
+```
+
+
+
+## c)
+
+
+## d)
+
+```{r}
+#install.packages("mvdalab")
+log_data=log(Data[,2:7]+1)
+library(mvdalab)
+# C.R. based on T^2
+MVcis(log_data,Vars2Plot =c(1,5),include.zero=T, level=0.95)
+```
+
+```{r}
+# CR based on Bonferroni
+alpha=0.05
+nc=ncol(log_data)
+nr=nrow(log_data)
+xbar2=colMeans(log_data)
+xvar=var(log_data)
+se=sqrt(diag(xvar))/sqrt(nr)
+bonfcr=matrix(0,nc,2)
+q=1-(alpha/(2*nc))
+cr=qt(q,(nr-1))
+for (i in 1:nc)
+{
+bonfcr[i,1]=xbar2[i]-cr*se[i]
+bonfcr[i,2]=xbar2[i]+cr*se[i]
+}
+bonfcr
+```
+
+
+
+```{r}
+#Asymp. simu. CR
+asymcr=matrix(0,nc,2)
+cr=sqrt(qchisq((1-alpha),nc))
+for (i in 1:nc)
+{
+asymcr[i,1]=xbar2[i]-cr*se[i]
+asymcr[i,2]=xbar2[i]+cr*se[i]
+}
+asymcr
+```
+
+
+
+```{r}
+# CR based on individual t
+indvcr=matrix(0,nc,2)
+q=1-(alpha/2)
+cr=qt(q,(nr-1))
+for (i in 1:nc){
+indvcr[i,1]=xbar2[i]-cr*se[i]
+indvcr[i,2]=xbar2[i]+cr*se[i]
+}
+indvcr
+```
+
+
+
+
+## e)
+
+## I)
+
+```{r}
+newcol=c(rep(1,330), rep(0,330))
+new_log_data=cbind(log_data, newcol)
+#install.packages("MVTests")
+library(MVTests)
+```
+
+
+
+
+```{r}
+BoxM(data= new_log_data[,-7],group=new_log_data[,7])
+```
+
+## II)
+
+```{r}
+#install.packages("DescTools")
+library(DescTools)
+HotellingsT2Test( log_data[1:330,],log_data[331:660,],test="chi")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

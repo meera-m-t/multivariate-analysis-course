@@ -12,9 +12,9 @@ header-includes:
   - \usepackage{setspace}
   - \doublespacing
 output:
-  pdf_document: default
   html_document:
     df_print: paged
+  pdf_document: default
   word_document: default
 classoption: fleqn
 ---
@@ -26,6 +26,8 @@ classoption: fleqn
 # Question-1
 
 ```{r}
+library(crayon)
+library(car)
 data=read.table("data.txt",header=T)
 head(data)
 ```
@@ -173,7 +175,9 @@ xyplot( pg ~ sp |decades, data = data1,layout=c(3,2), col=c(2,5))
 ```{r}
 parallelplot(~data1[,2:3]|data1[,5], data = data1, layout = c(5,1))
 ```
-# method-2
+
+
+## method-2
 ```{r}
 #since each decade has 120 rows (our dataset equally divided)
 # creat a new column with the labels

@@ -1,0 +1,1432 @@
+---
+title: "Homework-4"
+header-includes:
+  - \usepackage{lscape}
+  - \usepackage[english]{babel}
+  - \usepackage{multicol}
+  - \usepackage{here}
+  - \usepackage[version=3]{mhchem}
+  - \setlength{\columnsep}{1cm}
+  - \setlength{\parindent}{1cm} # paragraph indentation
+  - \setlength{\parskip}{8pt} # paragraph spacing
+  - \usepackage{setspace}
+  - \doublespacing
+output:
+  html_document:
+    df_print: paged
+  word_document: default
+  pdf_document: default
+classoption: fleqn
+---
+
+```{r}
+ set.seed(42)
+#setwd("~/Desktop/r-583")
+```
+
+## Question-5.22
+```{r}
+Fuel_x1=matrix(c(16.44,7.19,9.92,4.24, 11.20,14.25,13.50,13.32,29.11,12.68,7.51 ,9.90,10.25,11.11,12.17, 10.24,10.18,8.88,12.34,8.51,26.16,12.95,16.93,14.70,10.32),ncol=1,byrow=TRUE)
+Repair_x2 =matrix(c(12.43 ,2.70,1.35 ,5.78, 5.05,5.78,10.98 ,14.27,15.09,7.61,5.80  ,3.63, 5.07,6.15,14.26, 2.59,6.05,2.70,7.73,14.02,17.44,8.24,13.37,10.78,5.16 ),ncol=1,byrow=TRUE)
+Capital_x3 =matrix(c(11.23,3.92,9.75,7.78,10.67,9.88,10.60,9.45,3.28,10.23,8.13,9.13,10.17,7.61,14.39,6.09,12.14,12.23,11.68,12.01,16.89,7.18,17.59,14.58,17.00),ncol=1,byrow=TRUE)
+data<- data.frame(Fuel_x1=Fuel_x1,Repair_x2=Repair_x2,Capital_x3=Capital_x3)
+data
+```
+
+## a)
+
+```{r}
+par(mfrow=c(1,3))
+qqnorm(data$Fuel_x1);qqline(data$Fuel_x1,col="blue", cex=2, lwd=2)
+qqnorm(data$Repair_x2);qqline(data$Repair_x2,col="blue", cex=2, lwd=2)
+qqnorm(data$Capital_x3);qqline(data$Capital_x3,col="blue", cex=2, lwd=2)
+```
+```{r} 
+#install.packages("ICS")
+library(ICS)
+mvnorm.kur.test(data) 
+```
+```{r}
+source("qqchi2.R")
+qqchi2(data)
+```
+
+
+* it is not normal P-value is low.
+
+
+```{r,include=FALSE}
+#install.packages("asbio")
+library(asbio)
+```
+
+
+```{r}
+par(mfrow=c(1,3))
+bv.boxplot(data$Fuel_x1, data$Repair_x2, ID.out = TRUE,bg.out ="red",hinge.col="blue", fence.lty = 1,
+fence.col="blue",cex.ID.out=1.4, cex=1.4, xlab="Fuel_x1 ", ylab="Repair_x2", pch=19) 
+bv.boxplot(data$Fuel_x1, data$Capital_x3, ID.out = TRUE,bg.out ="red",hinge.col="blue", fence.lty = 1,
+fence.col="blue",cex.ID.out=1.4, cex=1.4,
+   xlab="Fuel_x1 ", ylab="Capital_x3", pch=19) 
+bv.boxplot(data$Repair_x2, data$Capital_x3,ID.out = TRUE,bg.out ="red",hinge.col="blue", fence.lty = 1,
+fence.col="blue",cex.ID.out=1.4, cex=1.4,
+   xlab="Repair_x2 ", ylab="Capital_x3", pch=19) 
+```
+
+
+
+
+
+```{r}
+data1=data[ -c(9, 21), ]
+par(mfrow=c(1,3))
+bv.boxplot(data1$Fuel_x1, data1$Repair_x2, main="Scatterplot 1", xlab="Fuel_x1 ", ylab="Repair_x2", pch=19,fence.col="blue") 
+bv.boxplot(data1$Fuel_x1, data1$Capital_x3, main="Scatterplot 2",bg.out ="green", xlab="Fuel_x1 ",ylab="Capital_x3",pch=19,fence.col="blue") 
+bv.boxplot(data1$Repair_x2, data1$Capital_x3, main="Scatterplot 3", fence.col="blue",
+   xlab="Repair_x2 ", ylab="Capital_x3", pch=19) 
+```
+
+
+
+```{r} 
+#install.packages("ICS")
+library(ICS)
+mvnorm.kur.test(data1) 
+```
+
+** it is normal 
+```{r}
+qqchi2(data1)
+
+```
+
+
+
+## Summary 
+1. After removing the two outliers 9 and 21, the Q-Q plots are showing that each variable seems to be normally distributed, and there is no more outlier. 
+2. After removing the outliers the data are following a multivariate normal distribution, and hence each marginal would follow a normal distribution too.
+
+## b)
+
+# CR based on Bonferroni
+
+```{r}
+alpha=0.05
+nc=ncol(data)
+nr=nrow(data)
+xbar2=colMeans(data)
+xvar=var(data)
+se=sqrt(diag(xvar))/sqrt(nr)
+bonfcr=matrix(0,nc,2)
+q=1-(alpha/(2*nc))
+cr=qt(q,(nr-1))
+for (i in 1:nc)
+{
+bonfcr[i,1]=xbar2[i]-cr*se[i]
+bonfcr[i,2]=xbar2[i]+cr*se[i]
+}
+bonfcr
+```
+## Simultaneous T2 intervals
+# Method-1
+
+```{r}
+n <- nrow(data)
+p <- ncol(data)
+xbar <- colMeans(data)
+S <- cov(data)
+```
+
+
+```{r}
+library(crayon)
+library(car)
+T.ci <- function(mu, Sigma, n, avec=rep(1,length(mu)), level=0.95){
+  
+  if(nrow(Sigma)!=p) stop("Need length(mu) == nrow(Sigma).")
+  if(ncol(Sigma)!=p) stop("Need length(mu) == ncol(Sigma).")
+  if(length(avec)!=p) stop("Need length(mu) == length(avec).")
+  if(level <=0 | level >= 1) stop("Need 0 < level < 1.")
+  cval <- qf(level, p, n-p)*p*(n-1) / (n-p)
+  zhat <- crossprod(avec, mu)
+  zvar <- crossprod(avec, Sigma %*% avec) / n
+  const <- sqrt(cval*zvar)
+
+  c(lower = zhat - const, upper = zhat + const)   }  
+```
+
+```{r}
+TCI  <- NULL
+
+for(k in 1:3){
+  avec <- rep(0, 3)
+  avec[k] <- 1
+  TCI <- c(TCI, T.ci(xbar, S, n, avec))
+  
+}
+rtab <- rbind(TCI)
+round(rtab, 2)
+```
+# Method-2
+```{r}
+#Calculate joint confidence intervals (Hotelling's T2 Intervals).
+#install.packages("mvdalab")
+library(mvdalab)
+MVcis(data,
+include.zero = F, level = .95)
+```
+
+from the two confidence intervals it can be seen that the interval obtained by Bonferroni method lie within the simulations T2 interval
+
+
+
+
+c) since the data were collected from graduate-student  volunteers so the analysis  cannot be extended to people with age in mid-twenties .it is because the sample was self selected samples of volunteers and not even random sample of graduate students
+
+**********************************************************************************************************************************************
+## Question -6.17
+```{r}
+data=read.table("T6-8.txt",header=T)
+head(data)
+```
+
+## a)
+
+```{r}
+C <- matrix(c( 1, 1,- 1,- 1,1,-1,1,-1,1,-1,-1,1),byrow=TRUE,nrow =3)
+C
+```
+
+
+The first contrast (first row of C) represetns the format effect, the second contrast denotes the parity effect, and the third is the interaction between these two effects.
+
+```{r}
+x=data
+y=t(C%*% t(x))
+ybar <-colMeans(y)
+yvar <- var(y)
+p <- nrow(yvar)
+n <- nrow(y)
+nullmean <- c(0, 0,0)
+d <- ybar-nullmean
+Sinv=solve(yvar)
+t2 <- n*t(d)%*% Sinv%*%d;
+t2mod <- (n-p)*t2/(p*(n-1))
+pval <- 1- pf(t2mod,p,n-p)
+ans=c(t2mod, t2, pval)
+names(ans)= c(" F-Statistics","Hotelling T-squared statistic", "p-value" )
+ans
+```
+
+Using the contrast, we obtain the Hotelling T 2 statistic 135.85 with p-value $1.01 × 10 −10$ . Therefore, the treatment effects are statistically significant at level $\alpha  = 0.05$.
+## b)
+
+```{r}
+#Calculate joint confidence intervals (Hotelling's T^2 Intervals).
+#install.packages("mvdalab")
+library(mvdalab)
+MVcis( data.frame(y),
+include.zero = F, level = .95)
+```
+
+Since the third C.I. (interaction C.I) contains zero, there is no significant interaction at the $5\%$ level. But, there are significant evidence to show the format and parity effects.
+## c) 
+Since there is no interaction between the format and parity effects, the $M$ model of numerical cognition is consistent with the data.
+
+
+## d)
+
+
+```{r}
+library(ICS)
+mvnorm.kur.test(y)
+```
+
+
+```{r}
+mvnorm.skew.test(y)
+```
+
+```{r}
+library(energy)
+mvnorm.etest(y , R=999)
+```
+
+We cannot reject the assumption of normality of the three-dimensional scored variable $Y = C^T X$, where $X$ is the four dimensional variable given in the question.
+
+**********************************************************************************************************************************************
+
+## Question-6.22
+
+
+```{r}
+data=read.table("oxygen.dat",header=T)
+head(data)
+```
+
+## a)
+
+
+```{r}
+qqchi2(data[1:4])
+```
+
+```{r} 
+#install.packages("ICS")
+library(ICS)
+mvnorm.kur.test(data[1:4]) 
+```
+*it is NOT normal
+
+
+```{r}
+#install.packages("DescTools")
+data1=data[1:4]
+```
+
+
+```{r}
+Y<-as.matrix(data1[,c("X1","X2","X3","X4")])
+mod <- lm( Y~ X1 + X2 + X3+X4, data=data)
+coef(mod)
+```
+
+```{r}
+# Note: 
+#the test statistics reported here is the test statistics reported here is F-statistics, but not the Hotelling T-squared statistic
+library(DescTools)
+HotellingsT2Test( data1[1:25,],data1[26:50,],test="f")
+```
+
+```{r}
+library(DescTools)
+HotellingsT2Test( data1[1:25,],data1[26:50,],test="chi")
+```
+
+
+
+The approximate F test statistic equals to 22.59. The Hotelling T2 is $96.373$ with p-value is very small $2.2e-16$. Thus, the null hypothesis is weakly significant. That is their mean vectors may not be equal.
+
+
+
+(in  page 293, for large sampel sizes ). The most linear combination leading to the rejection $H_0$ has coefficient vector. 
+
+```{r}
+library(MASS)
+xbar.male=colMeans(data1[1:25, ])
+xbar.female=colMeans(data1[26:50, ])
+S.male=cov(data1[1:25, ])
+S.female=cov(data1[26:50, ])
+weight.hat1= solve( 1/25 *(S.male+S.female )) %*% (xbar.male- xbar.female)
+weight.hat1
+```
+
+```{r}
+weight.hat2= solve( 1/2 *(S.male+S.female )) %*% (xbar.male- xbar.female)
+weight.hat2
+```
+
+
+The most responsible linear combination for the difference is proportional to $(1242.5, −79.70, −77.85, 9.89)$ or $(99.39, −6.37, −6.23, 0.79)$.
+
+b)
+
+```{r}
+male=data1[1:25,]
+female=data1[26:50,]
+```
+
+```{r}
+# CR based on Bonferroni male-female
+alpha=0.05
+nc=ncol(male-female)
+nr=nrow(male-female)
+xbar2=colMeans(male-female)
+xvar=var(male-female)
+se=sqrt(diag(xvar))/sqrt(nr)
+bonfcr=matrix(0,nc,2)
+q=1-(alpha/(2*nc))
+cr=qt(q,(nr-1))
+for (i in 1:nc)
+{
+bonfcr[i,1]=xbar2[i]-cr*se[i]
+bonfcr[i,2]=xbar2[i]+cr*se[i]
+}
+bonfcr
+```
+
+
+```{r}
+# CR based on Bonferroni female -male
+alpha=0.05
+nc=ncol(female-male)
+nr=nrow(female-male)
+xbar2=colMeans(female-male)
+xvar=var(female-male)
+se=sqrt(diag(xvar))/sqrt(nr)
+bonfcr=matrix(0,nc,2)
+q=1-(alpha/(2*nc))
+cr=qt(q,(nr-1))
+for (i in 1:nc)
+{
+bonfcr[i,1]=xbar2[i]-cr*se[i]
+bonfcr[i,2]=xbar2[i]+cr*se[i]
+}
+bonfcr
+```
+
+## Simultaneous T2 intervals
+```{r}
+n <- nrow(male-female)
+p <- ncol(male-female)
+xbar <- colMeans(male-female)
+S <- cov(male-female)
+```
+
+
+```{r}
+T.ci <- function(mu, Sigma, n, avec=rep(1,length(mu)), level=0.95){
+  
+  if(nrow(Sigma)!=p) stop("Need length(mu) == nrow(Sigma).")
+  if(ncol(Sigma)!=p) stop("Need length(mu) == ncol(Sigma).")
+  if(length(avec)!=p) stop("Need length(mu) == length(avec).")
+  if(level <=0 | level >= 1) stop("Need 0 < level < 1.")
+  cval <- qf(level, p, n-p)*p*(n-1) / (n-p)
+  zhat <- crossprod(avec, mu)
+  zvar <- crossprod(avec, Sigma %*% avec) / n
+  const <- sqrt(cval*zvar)
+  c(lower = zhat - const, upper = zhat + const)}
+```
+
+```{r}
+TCI  <- NULL
+
+for(k in 1:4){
+  avec <- rep(0, 4)
+  avec[k] <- 1
+  TCI <- c(TCI, T.ci(xbar, S, n, avec))
+ 
+}
+rtab <- rbind(TCI)
+round(rtab, 2)
+```
+
+```{r}
+#CI- Simultaneou MALE-FEMALE
+n <- nrow(male-female)
+p <- ncol(male-female)
+xbar <- colMeans(male-female)
+S <- cov(male-female)
+```
+
+
+```{r}
+T.ci <- function(mu, Sigma, n, avec=rep(1,length(mu)), level=0.95){
+  
+  if(nrow(Sigma)!=p) stop("Need length(mu) == nrow(Sigma).")
+  if(ncol(Sigma)!=p) stop("Need length(mu) == ncol(Sigma).")
+  if(length(avec)!=p) stop("Need length(mu) == length(avec).")
+  if(level <=0 | level >= 1) stop("Need 0 < level < 1.")
+  cval <- qf(level, p, n-p)*p*(n-1) / (n-p)
+  zhat <- crossprod(avec, mu)
+  zvar <- crossprod(avec, Sigma %*% avec) / n
+  const <- sqrt(cval*zvar)
+  c(lower = zhat - const, upper = zhat + const)}
+```
+
+```{r}
+TCI  <- NULL
+
+for(k in 1:4){
+  avec <- rep(0, 4)
+  avec[k] <- 1
+  TCI <- c(TCI, T.ci(xbar, S, n, avec))
+ 
+}
+rtab <- rbind(TCI)
+round(rtab, 2)
+```
+
+```{r}
+#CI- Simultaneou FEMALE-MALE
+n <- nrow(female-male)
+p <- ncol(female-male)
+xbar <- colMeans(female-male)
+S <- cov(female-male)
+```
+
+
+```{r}
+T.ci <- function(mu, Sigma, n, avec=rep(1,length(mu)), level=0.95){
+  
+  if(nrow(Sigma)!=p) stop("Need length(mu) == nrow(Sigma).")
+  if(ncol(Sigma)!=p) stop("Need length(mu) == ncol(Sigma).")
+  if(length(avec)!=p) stop("Need length(mu) == length(avec).")
+  if(level <=0 | level >= 1) stop("Need 0 < level < 1.")
+  cval <- qf(level, p, n-p)*p*(n-1) / (n-p)
+  zhat <- crossprod(avec, mu)
+  zvar <- crossprod(avec, Sigma %*% avec) / n
+  const <- sqrt(cval*zvar)
+  c(lower = zhat - const, upper = zhat + const)}
+```
+
+```{r}
+TCI  <- NULL
+
+for(k in 1:4){
+  avec <- rep(0, 4)
+  avec[k] <- 1
+  TCI <- c(TCI, T.ci(xbar, S, n, avec))
+ 
+}
+rtab <- rbind(TCI)
+round(rtab, 2)
+```
+from the two confidence intervals it can be seen that the interval obtained by Bonferroni method lie within the simulations T2 interval
+
+
+
+
+c) since the data were collected from graduate-student  volunteers so the analysis  cannot be extended to people with age in mid-twenties .it is because the sample was self selected samples of volunteers and not even random sample of graduate students
+
+**********************************************************************************************************************************************
+## Question-6.41
+
+
+
+```{r}
+severity=matrix(c("Low","Low","Low","Low","Low","Low","Low","Low","High","High","High","High","High","High","High", "High"),ncol=1,byrow=TRUE)
+complexity=matrix(c("Simple" ,"Simple" ,"Simple" ,"Simple" , "Complex","Complex","Complex" ,"Complex","Simple","Simple","Simple","Simple", "Complex","Complex","Complex","Complex"),ncol=1,byrow=TRUE)
+engineer =matrix(c("Novice","Novice","Guru","Guru","Novice","Novice","Guru","Guru","Novice","Novice","Guru","Guru","Novice","Novice","Guru","Guru"),ncol=1,byrow=TRUE)
+
+assessment=matrix(c(3.0,2.3,1.7,1.2,6.7,7.1,5.6,4.5,4.5,4.7,3.1,3.0,7.9,6.9,5.0,5.3),ncol=1,byrow=TRUE)
+implemention_time=matrix(c(6.3,5.3,2.1,1.6,12.6,12.8,8.8,9.2,9.5,10.7,6.3,5.6,15.6,14.9,10.4,10.4),ncol=1,byrow=TRUE)
+total_time=matrix(c(9.3,7.6,3.8,2.8,19.3,19.9,14.4,13.7,14.0,15.4,9.4,8.6,23.5,21.8,15.4,15.7),ncol=1,byrow=TRUE)
+data<- data.frame(severity=severity,complexity=complexity,engineer=engineer,assessment=assessment,implemention_time=implemention_time,total_time=total_time)
+data
+```
+
+
+## METHOD-1
+
+## MANOVA
+```{r}
+library(crayon)
+library(car)
+res.man1 <- manova(cbind(assessment,implemention_time) ~ severity, data = data)
+cat(red("Severity"))
+ cat('\n')
+summary(res.man1)
+res.man2 <- manova(cbind(assessment,implemention_time) ~ complexity, data = data)
+cat(red("Complexity" ))
+ cat('\n')
+summary(res.man2)
+res.man3 <- manova(cbind(assessment,implemention_time) ~ engineer, data = data)
+cat(red("Engineer" ))
+ cat('\n')
+summary(res.man3)
+res.man4 <- manova(cbind(assessment,implemention_time) ~ complexity*severity, data = data)
+cat(red("Severity * Complexity" ))
+ cat('\n')
+summary(res.man4)
+```
+
+##the indivisual ANOVA for each response (analysis of varianc for assessment)
+```{r}
+#install.packages("crayon")
+library(crayon)
+library(car)
+
+mod <- lm( assessment ~severity*complexity,data=data)
+fit1 <- Anova(mod, type=2)
+fit2 <- Anova(lm( assessment~complexity, data=data), type=2) 
+fit3 <- Anova(lm( assessment~severity, data=data), type=2) 
+fit4 <-Anova(lm( assessment~engineer, data=data), type=2)
+fit5 <- Anova(lm( assessment~complexity+severity+engineer+severity*complexity, data=data), type=2)
+cat(red("Severity"))
+ cat('\n')
+fit3
+cat(red("Complexity" ))
+ cat('\n')
+fit2
+cat(red("Engineer" ))
+ cat('\n')
+fit4
+cat(red("Severity * Complexity"))
+cat('\n')
+fit1
+cat(red("Error"))
+cat('\n')
+fit5
+cat(red("Total"))
+cat('\n')
+cat("DF:15  Seq SS: 61.074")
+```
+
+
+##the indivisual ANOVA for each response (analysis of variance for implemention_time)
+
+```{r}
+# install.packages("dplyr")
+library(crayon)
+library(car)
+
+mod <- lm( implemention_time ~severity*complexity,data=data)
+fit1 <- Anova(mod, type=2)
+fit2 <- Anova(lm(implemention_time~complexity, data=data), type=2) 
+fit3 <- Anova(lm(implemention_time~severity, data=data), type=2) 
+fit4 <-Anova(lm( implemention_time~engineer, data=data), type=2)
+fit5 <- Anova(lm( implemention_time~complexity+severity+engineer+severity*complexity, data=data), type=2)
+
+cat(red("Severity"))
+ cat('\n')
+fit3
+cat(red("Complexity" ))
+ cat('\n')
+fit2
+cat(red("Engineer" ))
+ cat('\n')
+fit4
+cat(red("Severity * Complexity"))
+cat('\n')
+fit1
+cat(red("Error implemention_time//implemention_time"))
+cat('\n')
+fit5
+cat(red("Total"))
+cat('\n')
+cat("DF:15  Seq SS: 254.884")
+```
+
+**the two ANOVA tabel depicts that for the two factor interaction are significient as p-value for all are less than 0.01 so both assessement time and implementation time are heavily affected by severity problem complexity problem and engineer experience .
+
+
+since there is no interaction term associated with engineer experience so it is possible to calculate the ordinary t interval for mean difference in assessment and implemination times for Novice and Guru. we will calculate the %95 confidence intervel 
+
+## paired T-Test and CI :Assessment_G, Assessement_N 
+
+
+```{r}
+data1 <- data[order(engineer),] 
+Assessment_G=data1$assessment[1:8]
+Assessement_N=data1$assessment[9:16]
+Assessement_N
+```
+
+## Simultaneous T2 intervals
+
+```{r}
+n <- nrow(Assessment_G-Assessement_N)
+p <- ncol(Assessment_G-Assessement_N)
+xbar <- Mean(Assessment_G-Assessement_N)
+S <- sd(Assessment_G-Assessement_N)
+std <- function(x) sd(x)/sqrt(length(x))
+Std<-std(Assessment_G-Assessement_N)
+ttest = t.test(Assessment_G-Assessement_N)
+ttest
+```
+
+the decrease in mean assessment time for gurus relative to novice is estimated between 1.145 and 2.280
+
+
+
+## paired T-Test and CI :implemention_time_G, implemention_time_N 
+```{r}
+data1 <- data[order(engineer),] 
+implemention_time_G=data1$implemention_time[1:8]
+implemention_time_N=data1$implemention_time[9:16]
+```
+
+
+
+```{r}
+n <- nrow(implemention_time_G-implemention_time_N)
+p <- ncol(implemention_time_G-implemention_time_N)
+xbar <- Mean(implemention_time_G-implemention_time_N)
+S <- sd(implemention_time-implemention_time_N)
+std <- function(x) sd(x)/sqrt(length(x))
+Std<-std(implemention_time_G-implemention_time_N)
+ttest = t.test(implemention_time_G-implemention_time_N)
+ttest
+```
+
+the decrease in mean implementation time for gurus relative to novice is estimated between 3.558086 and 4.766914
+
+
+
+## METHOD-2
+
+```{r}
+severity=matrix(c("Low","Low","Low","Low","Low","Low","Low","Low","High","High","High","High","High","High","High", "High"),ncol=1,byrow=TRUE)
+complexity=matrix(c("Simple" ,"Simple" ,"Simple" ,"Simple" , "Complex","Complex","Complex" ,"Complex","Simple","Simple","Simple","Simple", "Complex","Complex","Complex","Complex"),ncol=1,byrow=TRUE)
+engineer =matrix(c("Novice","Novice","Guru","Guru","Novice","Novice","Guru","Guru","Novice","Novice","Guru","Guru","Novice","Novice","Guru","Guru"),ncol=1,byrow=TRUE)
+
+assessment=matrix(c(3.0,2.3,1.7,1.2,6.7,7.1,5.6,4.5,4.5,4.7,3.1,3.0,7.9,6.9,5.0,5.3),ncol=1,byrow=TRUE)
+implemention_time=matrix(c(6.3,5.3,2.1,1.6,12.6,12.8,8.8,9.2,9.5,10.7,6.3,5.6,15.6,14.9,10.4,10.4),ncol=1,byrow=TRUE)
+total_time=matrix(c(9.3,7.6,3.8,2.8,19.3,19.9,14.4,13.7,14.0,15.4,9.4,8.6,23.5,21.8,15.4,15.7),ncol=1,byrow=TRUE)
+data.6.41<- data.frame(Severity=severity,Complexity=complexity,Experience=engineer,AssessTime=assessment,ImplementationTime=implemention_time,ResolutionTime=total_time)
+data.6.41
+```
+
+
+
+
+```{r}
+library(crayon)
+library(car)
+attach(data.6.41)
+Factor1=factor(Severity)
+Factor2=factor(Complexity)
+Factor3=factor(Experience)
+fit.anova1 <- aov( AssessTime~ Factor1*Factor2*Factor3, data=data.6.41)
+summary(fit.anova1)
+```
+
+```{r}
+fit.anova2 <- aov( ImplementationTime ~ Factor1*Factor2*Factor3, data=data.6.41)
+summary(fit.anova2)
+```
+
+
+```{r}
+fit.manova<- manova(cbind(AssessTime,ImplementationTime)~ Factor1*Factor2*Factor3,
+data = data.6.41 )
+summary(fit.manova )
+```
+
+
+The results show that the significant contributions to assessment time and implementation time are the severity and complexity of the problem, the experience of the engineer, and an interaction between the serevity and the complexity of the problem.
+
+The Bonferroni simultaneous confidence intervals for Treatment Effects are obtained in below
+
+```{r}
+Factor1=factor(Severity)
+Factor2=factor(Complexity)
+Factor3=factor(Experience)
+fit.manova<- manova(cbind(AssessTime,ImplementationTime)~ Factor1*Factor2*Factor3,
+data = data.6.41 )
+fit.manova.summary=summary(fit.manova)
+SSP.res=fit.manova.summary$SS$Residuals
+SSP.res
+```
+
+
+
+
+```{r}
+alpha=0.05
+n=2;g=2; b=2; k=2;p=2;
+nu=g*b*k*(n-1)
+y=cbind(AssessTime)
+# confidence intervals for tau
+atau=alpha/(8)
+tt=qt(1-atau,nu )
+se=sqrt(diag(SSP.res))*sqrt(2/ (k*b*n*nu))
+meanF1=aggregate(AssessTime
+, list( Factor1), mean)
+meanF2= aggregate(AssessTime , list( Factor2), mean)
+meanF3=aggregate(AssessTime , list( Factor3), mean)
+meanF1I=aggregate(ImplementationTime
+, list( Factor1), mean)
+meanF2I= aggregate(ImplementationTime , list( Factor2), mean)
+meanF3I=aggregate(ImplementationTime , list( Factor3), mean)
+CI=matrix(0,ncol=5,nrow=6)
+CI[1,]= (c( "Asses. Time" , "High-Low", meanF1[1,2] -meanF1[2,2],
+meanF1[1,2] -meanF1[2,2] - tt*se[1], meanF1[1,2]-meanF1[2,2] + tt*se[1]) )
+CI[2,]= (c( "Asses. Time" , "Complex-Simple", meanF2[1,2] -meanF2[2,2],
+meanF2[1,2] -meanF2[2,2] - tt*se[1], meanF2[1,2]-meanF2[2,2] + tt*se[1]) )
+CI[3,]= (c( "Asses. Time" , "Guru-Novice", meanF3[1,2] -meanF3[2,2],
+meanF3[1,2] -meanF3[2,2] - tt*se[1], meanF3[1,2]-meanF3[2,2] + tt*se[1]) )
+CI[4,]= (c( "Implem. Time" , "High-Low", meanF1I[1,2] -meanF1I[2,2],
+meanF1I[1,2] -meanF1I[2,2] - tt*se[2], meanF1I[1,2]-meanF1I[2,2] + tt*se[2]) )
+CI[5,]= (c( "Implem. Time" , "Complex-Simple", meanF2I[1,2] -meanF2I[2,2],
+meanF2I[1,2] -meanF2I[2,2] - tt*se[2], meanF2I[1,2]-meanF2I[2,2] + tt*se[2]) )
+CI[6,]= (c( "Implem. Time" , "Guru-Novice", meanF3I[1,2] -meanF3I[2,2],
+meanF3I[1,2] -meanF3I[2,2] - tt*se[2], meanF3I[1,2]-meanF3I[2,2] + tt*se[2]) )
+CI[, c(4:5)]=format(round(as.numeric( CI[, c(4:5)]),5), nsmall = 5)
+colnames(CI )=c("Variable" ,"contrast ", "estimate", " lower.CL" , "upper.CL" )
+CI=data.frame( CI )
+CI
+```
+
+** Or you could obtain the Bonferroni simultaneous confidence intervals for Treatment Effects as follows
+
+```{r}
+#emm_options(opt.digits = FALSE)
+#install.packages("emmeans")
+library(emmeans)
+library(lsmeans)
+X= as.matrix(data.6.41 [, c("AssessTime","ImplementationTime")])
+
+mod= lm(X ~ Factor1*Factor2 *Factor3 )
+p <- ncol(X)
+lsm.F1 <- lsm.F2 <-lsm.F3<- vector("list", p)
+names(lsm.F1) <- colnames(X)
+for(j in 1:p){
+wts <- rep(0, p*4)
+wts[1:4 ] <- 1
+lsm.F1[[j]] <- lsmeans(mod, "Factor1", weights= wts )
+lsm.F2[[j]] <- lsmeans(mod, "Factor2" , weights= wts )
+lsm.F3[[j]] <- lsmeans(mod, "Factor3" , weights= wts )
+}
+lsm.F1I <- lsm.F2I <-lsm.F3I<- vector("list", p)
+names(lsm.F1) <- colnames(X)
+for(j in 1:p){
+wts <- rep(1, p*4)
+wts[1:4 ] <- 0
+lsm.F1I[[j]] <- lsmeans(mod, "Factor1", weights= wts)
+lsm.F2I[[j]] <- lsmeans(mod, "Factor2" , weights= wts)
+lsm.F3I[[j]] <- lsmeans(mod, "Factor3" , weights= wts)
+}
+q <- p * 2 * (2-1)/2
+alp <- 0.05 / (2*q)
+
+# Bonferroni pairwise CIs for Factor 1
+CI2= rbind( confint(contrast(lsm.F1[[1]], "pairwise"), level=1-alp, adj="none") ,
+confint(contrast(lsm.F2[[1]], "pairwise"), level=1-alp, adj="none") ,
+confint(contrast(lsm.F3[[1]], "pairwise"), level=1-alp, adj="none"),
+confint(contrast(lsm.F1I[[1]], "pairwise"), level=1-alp, adj="none") ,
+confint(contrast(lsm.F2I[[1]], "pairwise"), level=1-alp, adj="none") ,
+confint(contrast(lsm.F3I[[1]], "pairwise"), level=1-alp, adj="none") )
+
+NN=c("Asses. Time", "Asses. Time", "Asses. Time","Implem. Time","Implem. Time","Implem. Time" )
+CI2[, c(3,5,6)]=format( round( ( CI2[, c(3,5,6)]),5), nsmall = 5)
+CI2= data.frame( NN, CI2)
+CI2
+```
+
+**********************************************************************************************************************************************
+## Question-7.21
+
+
+```{r}
+Wind_x1=matrix(c(8,7,7,10,6,8,9,5,7,8,6,6,7,10,10,9,8,8,9,9,10,9,8,5,6,8,6,8,6,10,8,7,5,6,10,8,5,5,7,7,6,8),ncol=1,byrow=TRUE)
+Solar_radiation_x2=matrix(c(98,107,103,88,91,90,84,72,82,64,71,91,72,70,72,77,76,71,67,69,62,88,80,30,83,84,78,79,62,37,71,52,48,75,35,85,86,86,79,79,68,40),ncol=1,byrow=TRUE)
+CO_x3=matrix(c(7,4,4,5,4,5,7,6,5,5,5,4,7,4,4,4,4,5,4,3,5,4,4,3,5,3,4,2,4,3,4,4,6,4,4,4,3,7,7,5,6,4),ncol=1,byrow=TRUE)
+NO_x4=matrix(c(2,3,3,2,2,2,4,4,1,2,4,2,4,2,1,1,1,3,2,3,3,2,2,3,1,2,2,1,3,1,1,1,5,1,1,1,1,2,4,2,2,3),ncol=1,byrow=TRUE)
+N02_x5=matrix(c(12,9,5,8,8,12,12,21,11,13,10,12,18,11,8,9,7,16,13,9,14,7,13,5,10,7,11,7,9,7,10,12,8,10,6,9,6,13,9,8,11,6),ncol=1,byrow=TRUE)
+O3_x6=matrix(c(8,5,6,15,10,12,15,14,11,9,3,7,10,7,10,10,7,4,2,5,4,6,11,2,23,6,11,10,8,2,7,8,4,24,9,10,12,18,25,6,14,5),ncol=1,byrow=TRUE)
+HC_x7=matrix(c(2,3,3,4,3,4,5,4,3,4,3,3,3,3,3,3,3,4,3,3,4,3,4,3,4,3,3,3,3,3,3,4,3,3,2,2,2,2,3,2,3,2),ncol=1,byrow=TRUE)
+data<- data.frame(Wind_x1=Wind_x1,Solar_radiation_x2=Solar_radiation_x2,CO_x3=CO_x3,NO_x4=NO_x4,N02_x5=N02_x5,O3_x6=O3_x6,HC_x7=HC_x7)
+head (data)
+```
+
+## METHOD-1
+#A)
+to fit linear regression model  consider Y1=NO2 are response variable and Z1=Wind ,Z2=solar radiation as predictor variables
+
+# i)
+```{r}
+#data$N02_x5  <- factor(data$N02_x5 )
+Y1 <-data$N02_x5 
+Z1<-data$Wind_x1
+Z2<-data$Solar_radiation_x2
+
+```
+
+```{r}
+mod <- lm(Y1  ~ Z1+Z2, data=data)
+coef(mod)
+```
+
+```{r}
+anova(mod)
+```
+
+```{r}
+summary(mod)
+```
+
+## ii)
+
+
+```{r}
+#install.packages("ggplot2")
+#install.packages("gridExtra")
+#install.packages("lindia")
+#install.packages("GGally")
+#install.packages("esquisse")
+ #lindia::gg_diagnose(mod, scale.factor = 0.3)
+library(lindia)
+
+plots <- gg_diagnose(mod, plot.all = FALSE)
+names(plots)     # get name of the plots
+exclude_plots <- plots[-c(1, 3) ]    #exclude certain diagnostics plots
+include_plots <- plots[c(1, 3)]    # include certain diagnostics plots
+plot_all(exclude_plots)              # make use of plot_all() in lindia
+plot_all(include_plots)
+
+
+```
+
+
+## iii)
+```{r}
+confint(mod)
+```
+```{r}
+newdata <- data.frame(Y1=factor(1, levels=c(1,2,3,4)), Z1=10, Z2=80)
+predict(mod, newdata, interval="confidence")
+```
+```{r}
+# prediction interval
+newdata <- data.frame(Y1=factor(1, levels=c(1,2,3,4)),   Z1=10, Z2=80)
+predict(mod, newdata, interval="prediction")
+```
+# B)
+# i)
+to fit linear regression model  consider Y1=NO2 are response variable and Z1=solar radiation ,Z2=solar radiation ^2 as predictor variables
+
+
+```{r}
+#data$N02_x5  <- factor(data$N02_x5 )
+Y1 <-data$N02_x5 
+Z1<-data$Solar_radiation_x2
+Z2<-data$Solar_radiation_x2^2
+
+```
+
+```{r}
+mod <- lm(Y1  ~ Z1+Z2, data=data)
+coef(mod)
+```
+
+```{r}
+anova(mod)
+```
+
+```{r}
+summary(mod)
+```
+
+# ii)
+
+
+```{r}
+#install.packages("ggplot2")
+#install.packages("gridExtra")
+#install.packages("lindia")
+#install.packages("GGally")
+#install.packages("esquisse")
+#lindia::gg_diagnose(mod, scale.factor = 0.3)
+library(lindia)
+
+plots <- gg_diagnose(mod, plot.all = FALSE)
+names(plots)     # get name of the plots
+exclude_plots <- plots[-c(1, 3) ]    #exclude certain diagnostics plots
+include_plots <- plots[c(1, 3)]    # include certain diagnostics plots
+plot_all(exclude_plots)              # make use of plot_all() in lindia
+plot_all(include_plots)
+
+
+```
+
+# iii)
+```{r}
+confint(mod)
+```
+```{r}
+newdata <- data.frame(Y1=factor(1, levels=c(1,2,3,4)), Z1=10, Z2=80)
+predict(mod, newdata, interval="confidence")
+```
+```{r}
+# prediction interval
+newdata <- data.frame(Y1=factor(1, levels=c(1,2,3,4)),   Z1=10, Z2=80)
+predict(mod, newdata, interval="prediction")
+```
+
+
+according to quadratic regression equation obtained, the most important part of the above regression line is the estimated slope b1=.528 which is positive and so it depicts that the  Y1=NO2 is expected to incease (or decrease) by .528 percentages as solar radiation increase(decrease) by one.
+
+
+## METHOD-2
+
+```{r}
+Wind_x1=matrix(c(8,7,7,10,6,8,9,5,7,8,6,6,7,10,10,9,8,8,9,9,10,9,8,5,6,8,6,8,6,10,8,7,5,6,10,8,5,5,7,7,6,8),ncol=1,byrow=TRUE)
+Solar_radiation_x2=matrix(c(98,107,103,88,91,90,84,72,82,64,71,91,72,70,72,77,76,71,67,69,62,88,80,30,83,84,78,79,62,37,71,52,48,75,35,85,86,86,79,79,68,40),ncol=1,byrow=TRUE)
+CO_x3=matrix(c(7,4,4,5,4,5,7,6,5,5,5,4,7,4,4,4,4,5,4,3,5,4,4,3,5,3,4,2,4,3,4,4,6,4,4,4,3,7,7,5,6,4),ncol=1,byrow=TRUE)
+NO_x4=matrix(c(2,3,3,2,2,2,4,4,1,2,4,2,4,2,1,1,1,3,2,3,3,2,2,3,1,2,2,1,3,1,1,1,5,1,1,1,1,2,4,2,2,3),ncol=1,byrow=TRUE)
+N02_x5=matrix(c(12,9,5,8,8,12,12,21,11,13,10,12,18,11,8,9,7,16,13,9,14,7,13,5,10,7,11,7,9,7,10,12,8,10,6,9,6,13,9,8,11,6),ncol=1,byrow=TRUE)
+O3_x6=matrix(c(8,5,6,15,10,12,15,14,11,9,3,7,10,7,10,10,7,4,2,5,4,6,11,2,23,6,11,10,8,2,7,8,4,24,9,10,12,18,25,6,14,5),ncol=1,byrow=TRUE)
+HC_x7=matrix(c(2,3,3,4,3,4,5,4,3,4,3,3,3,3,3,3,3,4,3,3,4,3,4,3,4,3,3,3,3,3,3,4,3,3,2,2,2,2,3,2,3,2),ncol=1,byrow=TRUE)
+data.7.21<- data.frame(Wind=Wind_x1,Solar=Solar_radiation_x2,CO=CO_x3,NO=NO_x4,NO2=N02_x5,O3=O3_x6,HC=HC_x7)
+head (data.7.21)
+```
+
+# a)
+```{r}
+attach(data.7.21)
+Y1=NO2; Y2=O3; Z1=Wind; Z2=Solar;
+fit1<- lm(Y1~Z1+Z2,data = data.7.21)
+summary(fit1)
+```
+
+** The fitted model is
+
+```{r}
+par(mfrow=c(1,2))
+plot(fit1$fitted,fit1$resid, lwd=2, col="blue")
+plot(density(fit1$resid), lwd=2, col="blue")
+```
+
+
+
+
+```{r}
+par(mfrow=c(2,2))
+plot(fit1, lwd=2, col = "blue")
+```
+
+```{r}
+shapiro.test(fit1$resid)
+```
+
+
+** The residuals are not normal distributed!
+```{r}
+newdata = data.frame(Z1=10, Z2=80)
+predict(fit1,new= newdata,interval='prediction')
+```
+
+
+## b)
+
+```{r}
+fit2<- lm(cbind(Y1,Y2)~Z1+Z2,data = data.7.21)
+summary(fit2)
+```
+
+
+
+```{r}
+par(mfrow=c(2,3))
+plot(fit2$fitted[,1],fit2$resid[,1], lwd=2, col = "blue")
+plot(fit2$fitted[,2],fit2$resid[,2], lwd=2, col = "blue")
+plot(fit2$resid[,1],fit2$resid[,2], lwd=2, col = "blue")
+qqnorm(fit2$resid[,1] , lwd=2,col = "blue")
+qqline(fit2$resid[,1], lwd=2, col = "red")
+qqnorm(fit2$resid[,2] , lwd=2,col = "blue")
+qqline(fit2$resid[,2], lwd=2, col = "red")
+plot(density(fit2$resid[,1]), lwd=2, col = "blue")
+```
+
+
+
+```{r}
+newdata = data.frame(Z1=10, Z2=80)
+predict(fit2,new= newdata,interval='prediction')
+```
+
+
+
+```{r}
+predictionEllipse <- function(mod, newdata, level = 0.95, ggplot = TRUE){
+# labels
+lev_lbl <- paste0(level * 100, "%")
+resps <- colnames(mod$coefficients)
+title <- paste(lev_lbl, "confidence ellipse for", resps[1], "and", resps[2])
+# prediction
+p <- predict(mod, newdata)
+# center of ellipse
+cent <- c(p[1,1],p[1,2])
+#shape of ellipse
+Z<- model.matrix(mod)
+Y<- mod$model[[1]]
+n<- nrow(Y)
+m<- ncol(Y)
+r <- ncol(Z) - 1
+S <- crossprod(resid(mod))/(n-r-1)
+# radius of circle generating the ellipse
+tt <- terms(mod)
+Terms <- delete.response(tt)
+mf <- model.frame(Terms, newdata, na.action = na.pass, xlev = mod$xlevels)
+z0 <- model.matrix(Terms, mf, contrasts.arg = mod$contrasts)
+rad <- sqrt((m*(n-r-1)/(n-r-m) *qf(level,m,n-r-m))*(1+z0%*%solve(t(Z)%*%Z) %*% t(z0)))
+# generate ellipse using ellipse function in car package
+ell_points <- car::ellipse(center = c(cent), shape = S, radius = c(rad), draw = FALSE)
+Variable1=c(p[1], min(ell_points[,1]), max(ell_points[,1]) )
+Variable2=c(p[2], min(ell_points[,2]), max(ell_points[,2]) )
+interval=rbind(Variable1, Variable2)
+colnames(interval)=c("Predicted", "L", "U")
+print( interval )
+# ggplot2 plot
+if(ggplot){
+require(ggplot2, quietly = TRUE)
+ell_points_df <- as.data.frame(ell_points )
+ggplot(ell_points_df, aes(x, y)) +
+geom_path() + theme_bw() + theme(legend.position = "none") +
+geom_point(aes(x =Y1, y =Y2), data = data.frame(p), col="red", lwd=3) +
+labs(x = resps[1], y = resps[2],
+title = title)
+} else {
+# base R plot
+plot(ell_points, type = "l", xlab = resps[1], ylab = resps[2], main = title, color= "blue")
+points(x = cent[1], y = cent[2], lwd=2, clo="red")
+}
+}
+predictionEllipse(mod = fit2, newdata = newdata)
+
+```
+
+
+
+** The ellipsoids are wider than previous individual prediction intervals. The reason is that obviously the margin of errors would increase when more variables are involved.
+
+********************************************************************************************************************************************
+
+
+
+****************************************************************************************************************************************
+## Question-7.24 
+
+
+
+```{r}
+data=read.table("T1-10.txt",header=T)
+head(data)
+```
+
+##METHOD-1
+#a)
+#i)
+```{r}
+Y1<-data$SaleHt
+Z1<-data$YrHgt
+Z2<-data$FtFrBody
+mod <- lm(Y1 ~ Z1+Z2, data=data)
+coef(mod)
+```
+
+```{r}
+anova(mod)
+```
+
+
+
+```{r}
+summary(mod)
+```
+
+#ii)
+```{r}
+confint(mod)
+```
+```{r}
+newdata <- data.frame(Y1=52.9, Z1=50.5, Z2=970)
+predict(mod, newdata, interval="confidence")
+```
+```{r}
+# prediction interval
+newdata <- data.frame(Y1=52.9,   Z1=50.5, Z2=970)
+predict(mod, newdata, interval="prediction")
+```
+
+#b)
+#i)
+
+```{r}
+Y1<-data$SaleHt
+Y2<-data$SaleWt
+Z1<-data$YrHgt
+Z2<-data$FtFrBody
+Y<-as.matrix(data[,c("SaleHt","SaleWt")])
+mod <- lm(Y ~ Z1+Z2, data=data)
+
+coef(mod)
+```
+```{r}
+manova(mod)
+```
+
+
+```{r}
+x<-summary(mod)
+x[[1]]
+```
+```{r}
+x[[2]]
+```
+
+#ii)
+
+```{r}
+pred.mlm <- function(object, newdata, level=0.95,
+                     interval = c("confidence", "prediction")){
+  form <- as.formula(paste("~",as.character(formula(object))[3]))
+  xnew <- model.matrix(form, newdata)
+  fit <- predict(object, newdata)
+  Y <- model.frame(object)[,1]
+  X <- model.matrix(object)
+  n <- nrow(Y)
+  m <- ncol(Y)
+  p <- ncol(X) - 1
+  sigmas <- colSums((Y - object$fitted.values)^2) / (n - p - 1)
+  fit.var <- diag(xnew %*% tcrossprod(solve(crossprod(X)), xnew))
+  if(interval[1]=="prediction") fit.var <- fit.var + 1
+  const <- qf(level, df1=m, df2=n-p-m)*m*(n - p - 1) / (n - p - m)
+  vmat <- (n/(n-p-1))*outer(fit.var, sigmas)
+  lwr <- fit - sqrt(const)*sqrt(vmat)
+  upr <- fit + sqrt(const)*sqrt(vmat)
+  if(nrow(xnew)==1L){
+    ci <- rbind(fit, lwr, upr)
+    rownames(ci) <- c("fit", "lwr", "upr")
+    } else {
+      ci <- array(0, dim=c(nrow(xnew), m, 3))
+      dimnames(ci) <- list(1:nrow(xnew), colnames(Y), c("fit", "lwr", "upr") )
+      ci[,,1] <- fit
+      ci[,,2] <- lwr
+      ci[,,3] <- upr
+      }
+  ci }
+```
+
+
+```{r}
+newdata <- data.frame(Y1=52.9, Z1=50.5, Z2=970)
+pred.mlm(mod, newdata, interval="confidence")
+```
+
+
+
+```{r}
+# prediction interval
+newdata <- data.frame(Y1=52.9,   Z1=50.5, Z2=970)
+pred.mlm(mod, newdata, interval="prediction")
+```
+
+##METHOD-2
+# a)
+```{r}
+data.7.24=read.table("T1-10.txt",header=T)
+colnames(data.7.24)=c( "Breed", "SalePr", "YrHgt", "FtFrbody", "PrctFFB", "Frame", "BkFat","SaleHt", "SaleWt")
+attach(data.7.24)
+Y1=SaleHt; Y2=SaleWt; Z1=YrHgt; Z2=FtFrbody;
+fit1<- lm(Y1~Z1+Z2,data = data.7.24)
+summary(fit1)
+```
+
+** The fitted model is:
+```{r}
+par(mfrow=c(1,2))
+plot(fit1$fitted,fit1$resid, lwd=2, col="blue")
+```
+
+```{r}
+plot(density(fit1$resid), lwd=2, col="blue")
+```
+
+```{r}
+par(mfrow=c(2,2))
+plot(fit1, lwd=2, col = "blue")
+```
+
+
+```{r}
+shapiro.test(fit1$resid)
+```
+
+
+** The residuals are normal distributed in this model.
+```{r}
+newdata = data.frame(Z1=50.5, Z2=970)
+predict(fit1,new= newdata,interval='prediction')
+```
+
+# b)
+
+```{r}
+fit2<- lm(cbind(Y1,Y2)~Z1+Z2,data = data.7.24)
+summary(fit2)
+```
+
+
+```{r}
+par(mfrow=c(2,3))
+plot(fit2$fitted[,1],fit2$resid[,1], lwd=2, col = "blue")
+plot(fit2$fitted[,2],fit2$resid[,2], lwd=2, col = "blue")
+plot(fit2$resid[,1],fit2$resid[,2], lwd=2, col = "blue")
+qqnorm(fit2$resid[,1] , lwd=2,col = "blue")
+qqline(fit2$resid[,1], lwd=2, col = "red")
+qqnorm(fit2$resid[,2] , lwd=2,col = "blue")
+qqline(fit2$resid[,2], lwd=2, col = "red")
+plot(density(fit2$resid[,1]), lwd=2, col = "blue")
+```
+
+```{r}
+newdata = data.frame(Z1=50.5, Z2=970)
+predict(fit2,new= newdata,interval='prediction')
+```
+
+
+```{r}
+predictionEllipse(mod = fit2, newdata = newdata)
+```
+
+
+** The ellipsoids intervals are wider.
+
+*********************************************************************************************************************************
+## Question-7.27
+
+
+```{r}
+severity=matrix(c(1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,1,1,2,2,2),ncol=1,byrow=TRUE)
+complexity=matrix(c(1 ,1 ,1,1 ,2,2,2,2,1,1,1,1, 2,2,2,2,2,2,1,1,2),ncol=1,byrow=TRUE)
+engineer =matrix(c(2,2,1,1,2,2,1,1,2,2,1,1,2,2,1,1,3,3,3,3,3),ncol=1,byrow=TRUE)
+
+assessment=matrix(c(3.0,2.3,1.7,1.2,6.7,7.1,5.6,4.5,4.5,4.7,3.1,3.0,7.9,6.9,5.0,5.3,5.3,5.0,4.0,4.5,6.9),ncol=1,byrow=TRUE)
+implemention_time=matrix(c(6.3,5.3,2.1,1.6,12.6,12.8,8.8,9.2,9.5,10.7,6.3,5.6,15.6,14.9,10.4,10.4,9.2,10.9,8.6,8.7,14.9),ncol=1,byrow=TRUE)
+total_time=matrix(c(9.3,7.6,3.8,2.8,19.3,19.9,14.4,13.7,14.0,15.4,9.4,8.6,23.5,21.8,15.4,15.7,14.5,15.9,12.6,13.2,21.8),ncol=1,byrow=TRUE)
+data<- data.frame(severity=severity,complexity=complexity,engineer=engineer,assessment=assessment,implemention_time=implemention_time,total_time=total_time)
+
+
+
+#data$severity[data$severity=="Low"]=1
+#data$severity[data$severity=="High"] = 2
+#data$complexity[data$complexity=="Simple"] =1
+#data$complexity[data$complexity=="Complex"]=2
+#data$engineer[data$engineer=="Guru"]=1
+#data$engineer[data$engineer=="Novice"]=2
+#data$engineer[data$engineer=="Experienced"]=3
+data
+```
+
+
+#part-1
+
+```{r}
+mod <- lm(assessment  ~ severity+complexity, data=data)
+coef(mod)
+```
+
+```{r}
+anova(mod)
+```
+
+
+
+```{r}
+summary(mod)
+```
+
+
+
+```{r}
+#install.packages("ggplot2")
+#install.packages("gridExtra")
+#install.packages("lindia")
+#install.packages("GGally")
+#install.packages("esquisse")
+ #lindia::gg_diagnose(mod, scale.factor = 0.3)
+library(lindia)
+
+plots <- gg_diagnose(mod, plot.all = FALSE)
+names(plots)     # get name of the plots
+exclude_plots <- plots[-c(1, 3) ]    #exclude certain diagnostics plots
+include_plots <- plots[c(1, 3)]    # include certain diagnostics plots
+plot_all(exclude_plots)              # make use of plot_all() in lindia
+plot_all(include_plots)
+
+
+```
+#part-2
+
+
+```{r}
+Y<-as.matrix(data[,c("implemention_time")])
+mod <- lm(Y  ~ severity+complexity, data=data)
+coef(mod)
+```
+
+```{r}
+anova(mod)
+```
+
+
+
+```{r}
+summary(mod)
+```
+
+
+
+```{r}
+#install.packages("ggplot2")
+#install.packages("gridExtra")
+#install.packages("lindia")
+#install.packages("GGally")
+#install.packages("esquisse")
+ #lindia::gg_diagnose(mod, scale.factor = 0.3)
+library(lindia)
+
+plots <- gg_diagnose(mod, plot.all = FALSE)
+names(plots)     # get name of the plots
+exclude_plots <- plots[-c(1, 3) ]    #exclude certain diagnostics plots
+include_plots <- plots[c(1, 3)]    # include certain diagnostics plots
+plot_all(exclude_plots)              # make use of plot_all() in lindia
+plot_all(include_plots)
+
+
+```
+
+
+
+
+# part-3
+#MANOVA
+```{r}
+library(crayon)
+library(car)
+res.man1 <- manova(cbind(assessment,implemention_time) ~ severity, data = data)
+cat(red("Severity"))
+ cat('\n')
+summary(res.man1)
+res.man2 <- manova(cbind(assessment,implemention_time) ~ complexity, data = data)
+cat(red("Complexity" ))
+ cat('\n')
+summary(res.man2)
+```
+
+acccording to all above output all the p-values are less than .05 which indicates that the null hypothesis for test will be rejected
+
+*****************************************************************************************************************
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

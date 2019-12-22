@@ -1,0 +1,610 @@
+---
+title: "Homework-2"
+header-includes:
+  - \usepackage{lscape}
+  - \usepackage[english]{babel}
+  - \usepackage{multicol}
+  - \usepackage{here}
+  - \usepackage[version=3]{mhchem}
+  - \setlength{\columnsep}{1cm}
+  - \setlength{\parindent}{1cm} # paragraph indentation
+  - \setlength{\parskip}{8pt} # paragraph spacing
+  - \usepackage{setspace}
+  - \doublespacing
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+  word_document: default
+classoption: fleqn
+
+---
+## Question-4
+
+## a)
+```{r}
+A=matrix(c(4, 8, 8,3, 6, 9),ncol=3,byrow=TRUE)
+x=A  %*% t(A)
+x
+```
+
+```{r}
+ev <- eigen(x)
+# extract components
+(values <- ev$values)
+```
+
+
+```{r}
+(vectors <- ev$vectors)
+```
+
+## b)
+```{r}
+y= t(A) %*% A
+y
+
+```
+
+
+
+
+
+
+```{r}
+ev <- eigen(y)
+# extract components
+(values <- ev$values)
+```
+
+
+```{r}
+(vectors <- ev$vectors)
+```
+
+## c)
+
+```{r}
+ev <- eigen(x)
+# extract components
+    
+values<-matrix(c(267.306462 , 0, 0, 2.693538),ncol=2,byrow=TRUE)
+vectors <- ev$vectors
+
+vectors %*% values %*% t(vectors)
+```
+
+** Another way
+
+```{r}
+D<-ev$values[1]*ev$vectors[,1]%*%t(ev$vectors[,1])+ev$values[2]*ev$vectors[,2]%*%t(ev$vectors[,2])
+D
+```
+
+
+```{r}
+
+ev$vectors[,1]%*%t(ev$vectors[,1])
+```
+
+
+```{r}
+ev$vectors[,2]%*%t(ev$vectors[,2])
+```
+
+
+
+
+
+```{r}
+all.equal(x,D)
+```
+
+
+
+
+## Question-7
+
+# a)
+
+The Diabetes dataset is contained in the heplots package
+```{r ,include=FALSE}
+#install.packages("heplots")
+#install.packages("candisc")
+library(heplots)
+library(candisc)
+library(car)
+data(Diabetes, package="heplots")
+str(Diabetes)
+```
+
+# The variables are:
+
+relwt: relative weight, expressed as the ratio of actual weight to expected weight, given the person’s height
+glufast: fasting plasma glucose level
+glutest: test plasma glucose level, a measure of glucose intolerance,
+instest: plasma insulin during test, a measure of insulin response to oral glucose,
+sspg: steady state plasma glucose, a measure of insulin resistance
+group: diagnostic group
+
+```{r}
+head(Diabetes)
+```
+
+In this question  we use the given Diabeates dataset 
+```{r}
+Diabetes=read.table("Diabetes.txt",header=T)
+head(Diabetes)
+```
+
+
+```{r}
+colnames(Diabetes)[colnames(Diabetes)=="y1"] <- "relwt"
+colnames(Diabetes)[colnames(Diabetes)=="x1"] <- "glutest"
+colnames(Diabetes)[colnames(Diabetes)=="x2"] <- "instest"
+colnames(Diabetes)[colnames(Diabetes)=="x3"] <- "sspg"
+colnames(Diabetes)[colnames(Diabetes)=="y2"] <- "glufast"
+Diabetes=Diabetes[,2:6]
+head(Diabetes)
+```
+
+## The univarite normality tests for all three margins:
+
+```{r}
+x=Diabetes[,3:5]
+```
+
+
+```{r}
+library(crayon)
+library(car)
+cat(red("Shapiro-Wilk normality test of glutest: \n"))
+shapiro.test( x[,1])$p.value
+cat(red("Shapiro-Wilk normality test of instest: \n"))
+shapiro.test( x[,2])$p.value
+cat(red("Shapiro-Wilk normality test of sspg: \n"))
+shapiro.test( x[,3])$p.value
+```
+
+# summary: 
+Based on shapiro-Wilk test, all marginal variables are normally distributed (large p-values $> 0.05$), so we can not reject the H_0 asssumption . 
+
+## The multivarite normal test.
+
+```{r}
+cat(red('1. The chi-square QQ-plot \n'))
+qqchi2 <- function(da){
+if(!is.matrix(da))da=as.matrix(da)
+nr = dim(da)[1]
+nc = dim(da)[2]
+dev=scale(da,center=T,scale=F)
+dev=as.matrix(dev)
+s=cov(da)
+si=solve(s)
+d2=sort(diag(dev%*%si%*%t(dev)))
+prob=(c(1:nr)-0.5)/nr
+q1=qchisq(prob,nc)
+plot(q1,d2,xlab='Quantile of chi-square',ylab= expression(d^2), lwd=2, cex.lab=1.2 )
+fit = lsfit(q1,d2)
+fitted = d2-fit$residuals
+lines(q1,fitted, col="blue", lwd=2)
+rq=cor(q1,d2)
+cat("correlation coefficient:",rq,"\n")
+}
+qqchi2(x)
+```
+** You can call function using  "source " command.
+
+```{r}
+source("qqchi2.R")
+qqchi2(x)
+```
+
+# Summary:
+
+Based on the QQ plot, we can see that the values of $d^2$ are very close to the Chi-square distribution with 3 degree of freedom (the values are not deviated from the straight line), this might be a good indication that three-variate data has a multivariate normal distribution.
+
+
+
+```{r}
+cat(red("2.MLEs for Multivariate Normal distribution \n \n"))
+library(MASS)
+library(boot)
+set.seed(2244)
+source("testnormality.R")
+cat(red("p.value is :\n"))
+testnormality(x)
+```
+
+
+```{r}
+#install.packages("energy" )
+cat(red("3.Energy test of multivariate normality \n \n"))
+library(energy)
+cat(red("p.value is :\n"))
+mvnorm.etest (x, R=999)$p.value
+```
+
+```{r,include=FALSE}
+#install.packages("QuantPsyc")
+library(QuantPsyc)
+```
+
+```{r}
+cat(red("4.Test for multivariate skewness and kurtosis \n \n"))
+mn <- mult.norm(x, chicrit=0.001) 
+mn$mult.test
+```
+
+** All of the multivariate tests above are having a large p-value, which would not reject the null hypothesis that the data are following a multivariate normal distribution.
+
+
+```{r}
+cat (red("5.QQ-plot of Beta for  stiffness data"))
+qqbeta <- function(da){
+# The data matrix is "da".
+ if(!is.matrix(da))da=as.matrix(da)
+ nr = dim(da)[1]; nc = dim(da)[2]
+ dev=scale(da,center=T,scale=F)
+ dev=as.matrix(dev)      
+ s=cov(da)            
+ si=solve(s)
+ d2=sort(diag(dev%*%si%*%t(dev))) 
+ d2=nr*d2/((nr-1)^2)
+ a <- nc/2; b <- (nr-nc-1)/2
+ alpha <- (nc-2)/(2*nc)
+ beta <- (nr-nc-3)/(2*(nr-nc-1))
+ mn = min(a,b,alpha,beta)
+ if(mn > 0){
+  prob=(c(1:nr)-alpha)/(nr-alpha-beta+1)
+  q1=qbeta(prob,a,b)   
+  plot(q1,d2,xlab='Quantile of beta-dist',ylab=expression(d^2), lwd=2, cex.lab=1.2 )
+
+  fit = lsfit(q1,d2)
+  fitted = d2-fit$residuals
+  lines(q1,fitted,  col="blue", lwd=2)
+  rq=cor(q1,d2)
+  cat("correlation coefficient:",rq,"\n")
+ }
+ else{
+  cat("Insufficient sample size")
+  }
+}
+
+qqbeta(x)
+```
+
+
+## b)
+
+```{r}
+colMeans(x)
+```
+
+
+```{r}
+cov(x)
+```
+
+
+
+## c)
+
+```{r}
+ev <- eigen(cov(x))
+# extract components
+(values <- ev$values)
+```
+```{r}
+(vectors <- ev$vectors)
+```
+
+***********************************************************************************************************************************
+
+## Question-8
+# a) 
+
+```{r}
+dow.jones <- c(-0.6,3.1,25.3,-16.8,-7.1,-6.2,25.2,22.6,26)
+qqnorm(dow.jones)
+qqline(dow.jones, col="blue" , cex=2, lwd=2)
+```
+
+
+
+** According the qq plot, the data seem to not be normally distributed as they are deviated from the straight line. But let see what are the results of tests.
+
+
+
+# b)
+
+
+```{r}
+j <- matrix(c(1:9),ncol=1,byrow=TRUE)
+x_j=matrix(c(-0.6, 3.1, 25.3,-16.8,-7.1,-6.2, 25.2, 22.6, 26.0),ncol=1,byrow=TRUE)
+probability =(c(1:9)-.5)/9
+q_j=qnorm(probability)
+qq <- data.frame(j=j,x_j=x_j,probability=probability,q_j=q_j)
+
+qq
+```
+
+
+
+```{r}
+qqnorm(probability);qqline(x_j, col="blue" , cex=2, lwd=2)
+```
+
+
+```{r}
+y=sort(x_j)
+z=qnorm(probability)
+cor(y,z)
+```
+
+
+This $r_q= 0.9351453$ value is higher than the the $5\%$ critical value of the correlation coefficient for $n = 9$ which is less than 0.9198 we cannot reject the assumption of normality. This also is supported by the other univariate normality tests like
+
+
+```{r}
+shapiro.test(x_j)
+```
+
+
+```{r}
+x_bar=mean(x_j)
+q_bar=mean(q_j)
+
+a=(x_j-x_bar)^2
+b=(q_j-q_bar)^2
+c=(x_j-x_bar)
+d=(q_j-q_bar)
+sum1=sum(c*d)
+sum2=(sum(a))^.5  * (sum(b))^.5   
+r=sum1/sum2
+r
+```
+
+since r<0.9351453, reject $H_0$ the hypthesis of normality   
+
+
+**********************************************************************************************************************************************
+## Question-9
+
+# a)
+
+```{r}
+City = matrix(c("akronOH","albanyNY","allenPA" ,"atlantGA ","baltimMD" ,"birmhmAL","bostonMA","bridgeCT","bufaloNY","cantonOH","chatagTN","chicagIL","cinnciOH","clevelOH","colombOH","dallasTX"),ncol=1,byrow=TRUE)
+Rainfall =matrix(c(36,35,44,47, 43,53,43,45,36, 36,52 ,33,40,35,37, 36),ncol=1,byrow=TRUE)
+Education =matrix(c(11 ,11,10 ,11, 10,10,12 ,11,11, 11,10  ,11, 10,11,12,  12 ),ncol=1,byrow=TRUE)
+Popden =matrix(c(3243, 4281,4260 , 3125, 6441, 3325,4679 ,2140,6582, 4213, 2302,6122  ,4101 , 3042 ,4259 , 1441),ncol=1,byrow=TRUE)
+Nonwhite =matrix(c(9,4,1,27, 25,39,4,5,8, 7,22 ,16,13,15,13, 15),ncol=1,byrow=TRUE)
+NOX=matrix(c( 15 ,10,6, 8, 38, 32,32, 4 ,  12 , 7 ,8  ,63, 26 , 21,9 , 1 ),ncol=1,byrow=TRUE)
+SO2 =matrix(c(59,39 ,33 ,24, 206 ,72 ,62 ,4,37 , 20 ,27  ,278 ,146 ,64 ,15 , 1 ),ncol=1,byrow=TRUE)
+Mortality  =matrix(c(921,997,962, 982, 1071,1030,935,899,1002, 912,1018 ,1025,970,986,959, 860),ncol=1,byrow=TRUE)
+utilities<- data.frame(City=City,Rainfall=Rainfall,Education=Education,Popden =Popden,Nonwhite=Nonwhite,NOX=NOX,SO2=SO2,Mortality=Mortality   )
+utilities
+```
+
+```{r,fig.width =10,fig.length = 10}
+#install.packages("TeachingDemos")
+#install.packages("aplpack")
+library(TeachingDemos)  # need package TeachingDemos installed
+library(aplpack)
+
+ faces2(utilities[,2:8], labels = unlist(strsplit( paste(utilities[,1]), split=", ")), col="red" ) # another function
+
+faces(utilities[,2:8], labels = unlist(strsplit( paste(utilities[,1]), split=", ")),  col.nose = rainbow(20), 
+    col.eyes = rainbow(20, start = 0.6, end = 0.85), 
+    col.hair = terrain.colors(20), col.face = heat.colors(20), 
+    col.lips = rainbow(20, start = 0, end = 0.2), 
+    col.ears = rainbow(20, start = 0, end = 0.2)) 
+```
+
+# Summary:
+In terms of “Rainfall” and “Education”, (face), atlantGA and bostonMa are similar, akronOH, bridgeCT,dallasTX are similar, baltimMD and chicagIL are similar, . . . .
+In terms of “Education”, “Popden”, and “Nonwhite” (hair), allenPA, bridgeCT, and chatagTN are similar,bufaloNY and colombOH are similar, and so on.
+
+```{r,fig.width =10,fig.length = 10}
+utilities1 <-utilities
+
+
+stars(utilities1[,2:8],labels=unlist(strsplit( paste(utilities[,1]), split=", ")), lwd=1.2, key.loc = c(13, 2),
+							 col.stars=rainbow(22), col.lines=1:20)
+
+stars(utilities1[,2:8],labels=unlist(strsplit( paste(utilities[,1]), split=", "))  ,key.loc = c(13, 2), lwd=1.2)
+utilities
+```
+
+the same "faces function " but here based on the key that exist on  in the bottom left of the plot
+
+## b)
+
+```{r,fig.width =10,fig.length = 10}
+library(car)
+library(carData)
+scatterplotMatrix(utilities[,-1], diagonal=list(method="density" ),
+regLine = list(method=lm, lty=1, lwd=2, col="red"),
+smooth=list(smoother=loessLine, spread=TRUE,lty.smooth=1, lwd.smooth=1.5, lty.spread=3, lwd.spread=1))
+```
+
+# Summary:
+There is a very strong positive correlation between So2 and NoX, a positive associations between So2 and Mortality, NoX and Mortality, popden and mortality.
+It worth to notice that the mortality positively associated with SO2, NoX, Nonwhite, and Popden, however it is negatively associated with the Education. This is another indication of the influence of Education to reduce crime.
+
+
+
+
+## c)
+
+```{r}
+air.data <- read.table("airpoll.txt", head=T)
+```
+
+
+```{r}
+install.packages("asbio")
+library(asbio)
+bv.boxplot(air.data[,3],air.data[,8], ID.out = TRUE,
+bg.out = "red", xlab=" Education", ylab=" Mortality")
+```
+
+
+
+```{r}
+#install.packages("asbio")
+library(asbio)
+bv.boxplot(air.data[1:16,3],air.data[1:16,8],
+bg.out = "red", xlab=" Education", ylab=" Mortality")
+```
+
+# Summary:
+** there is no outlier point since no point has red color based on this parameter bg.out='red'
+** Both plots are showing that higher education would have less mortality and vice versa.
+
+## d)
+## Method-1
+
+```{r,fig.width =20,fig.length = 20}
+#install.packages("hrbrthemes")
+#install.packages("viridis")
+# Libraries
+library(ggplot2)
+library(dplyr)
+library(hrbrthemes)
+library(viridis)
+
+
+
+  ggplot(data=utilities,aes(x=utilities1$Education,y=utilities1$Mortality,color=utilities1$Popden, label=unlist(strsplit( paste(utilities[,1]), split=", ")))) +
+  geom_point(alpha = 0.1, size = 12)+
+    ylab("Mortality") +
+    xlab("Education") + 
+    theme(legend.position = "none")  +  
+    geom_text(aes(label=unlist(strsplit( paste(utilities[,1]), split=", "))),hjust=0, vjust=0)
+
+```
+
+
+## Method-2
+
+```{r,fig.width =10,fig.length = 10}
+N=16
+Education=air.data[1:16,3]
+Mortality=air.data[1:16,8]
+C=air.data[1:16,4]
+weight <- -0.3*Education -0.4*Mortality + 100 + rnorm(N, 0, 3)
+radius <- sqrt(C/ pi )
+wScale <- (weight-min(weight)) * (0.8 / abs(diff(range(weight)))) + 0.2
+symbols( Education, Mortality, circles=radius, inch=0.6, fg=NULL, bg=rainbow(N),
+main="Population Dencity")
+```
+
+## e)
+
+
+
+```{r}
+cov(utilities[,2:8])
+```
+```{r}
+cor(utilities[,2:8])
+```
+# Summary:
+
+Rainfall is negatively correlated  with "Education"
+It is negatively correlated with Education, Mortality
+It is positively correlated with  SO2 and NOX,..., etc
+
+
+
+
+## f)
+
+```{r}
+names(utilities1) <-  c("V1","V2", "V3", "V4","V5","V6","V7","V8")
+y1=(utilities1$V2)/sd(utilities1$V2)
+y2=(utilities1$V3)/sd(utilities1$V3)
+y3=(utilities1$V4)/sd(utilities1$V4)
+y4=(utilities1$V5)/sd(utilities1$V5)
+y5=(utilities1$V6)/sd(utilities1$V6)
+y6=(utilities1$V7)/sd(utilities1$V7)
+y7=(utilities1$V8)/sd(utilities1$V8)
+
+y=data.frame(y1,y2,y3,y4,y5,y6,y7)
+
+```
+
+```{r}
+
+dist(y, method = "euclidean", diag = FALSE, upper = FALSE, p = 2)
+```
+
+
+## g)
+
+
+```{r}
+ qqchi2(utilities[,2:8])
+```
+```{r}
+qqbeta(utilities[,2:8]) ## QQ-plot of Beta for  stiffness data
+```
+
+```{r}
+set.seed(2244)
+testnormality(utilities[,2:8])
+```
+
+
+```{r}
+# Energy test for MVN
+library(energy)                    # for mvnorm.etest()
+mvnorm.etest(utilities[,2:8],  R=999) # X is the  Stiffness of boards data set
+```
+
+
+```{r }
+library(QuantPsyc)                 # for mult.norm()
+mn <- mult.norm(utilities[,2:8], chicrit=0.001) # X is the  Stiffness of boards data set
+y<-mn$mult.test
+y
+```
+
+
+
+
+```{r} 
+#install.packages("ICS")
+library(ICS)
+mvnorm.kur.test(utilities[,2:8]) #=> p-value =5.536e-05
+```
+** it is normal  p-value higher than alpha
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
