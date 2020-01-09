@@ -40,7 +40,7 @@ Prof [S.Yaser Samadi](https://math.siu.edu/faculty-staff/faculty/samadi.php:)
 
 ## Project
 
-I applied most of multivariate statistical methods covered in this course on [Breast Cancer Wisconsin (Diagnostic) Data Set"](https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+(Diagnostic) where,  
+I applied most of multivariate statistical methods covered in this course on [Breast Cancer Wisconsin (Diagnostic) Data Set](https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+(Diagnostic) where,  
 
 * ID: Sample code number: id number 
 * X1: Clump Thickness: 1 - 10 
