@@ -1,0 +1,1722 @@
+---
+title: "project"
+header-includes:
+  - \usepackage{lscape}
+  - \usepackage[english]{babel}
+  - \usepackage{multicol}
+  - \usepackage{here}
+  - \usepackage[version=3]{mhchem}
+  - \setlength{\columnsep}{1cm}
+  - \setlength{\parindent}{1cm} # paragraph indentation
+  - \setlength{\parskip}{8pt} # paragraph spacing
+  - \usepackage{setspace}
+  - \usepackage{makeidx}
+  - \doublespacing
+output:
+  html_document:
+    df_print: paged
+  word_document: default
+  pdf_document: default
+classoption: fleqn
+---
+
+```{r}
+#set.seed(42)
+#setwd("~/Desktop/r-583")
+
+```
+
+```{r,include=FALSE}
+library(crayon)
+library(car)
+```
+
+
+```{r}
+cat( red("*** The Dataset *** \n \n") )
+Data<- read.table("breast-cancer-wisconsin.data", head=T)
+Data<-na.omit(Data)
+Data<- unique(Data)
+names(Data)[11] <- "Class"
+Data$X1 <- as.numeric(Data$X1)
+Data$X2 <- as.numeric(Data$X2)
+Data$X3 <- as.numeric(Data$X3)
+Data$X4 <- as.numeric(Data$X4)
+Data$X5 <- as.numeric(Data$X5)
+Data$X6 <- as.numeric(Data$X6)
+Data$X7 <- as.numeric(Data$X7)
+Data$X8 <- as.numeric(Data$X8)
+Data$X9 <- as.numeric(Data$X9)
+Data
+```
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+cat(red("*** The sample means, sample covariance matrix, and sample correlation matrix 9 variables *** \n\n"))
+#install.packages("tidyverse")
+cat(red("The means of columns \n \n"))
+round(colMeans(Data[2:10]), digits = 4)
+```
+
+
+
+
+
+```{r}
+cat(red("The covariance matrix \n \n"))
+round(cov(Data[,2:10]), digits=5)
+```
+
+```{r}
+cat(red("The correlation matrix \n \n"))
+round(cor(Data[,2:10]), digits=5)
+```
+
+```{r}
+cat(red("the summary \n \n"))
+summary(Data[,2:10], digits=1)
+```
+
+
+
+
+****************************************************************************************************************************************************************************************************************************************************************
+
+
+
+```{r, out.width = "100%", out.hight = "100%" }
+cat (red("*** Using different visualization plots to get a deeper understanding of the relationshipS between the different featurers (X1 To X9) *** " ))
+#install.packages("pairsD3")
+require(pairsD3)
+pairsD3(Data[, 2:10][,c(1,2,3,4,5,6,7,8,9)], opacity = 0.9, cex = 2, width = 1000)
+```
+
+```{r, out.width = "200%", out.hight = "100%",dpi = 200,fig.width=15,fig.hight=15}
+#install.packages("psych")
+
+library(psych)
+pairs.panels(Data[,2:10], 
+             method = "pearson", # correlation method
+             hist.col = "#00AFBB",
+             density = TRUE,  # show density plots
+             ellipses = TRUE # show correlation ellipses
+             )
+
+```
+
+
+
+```{r ,dpi = 400, out.width = "100%"}
+par(mfrow=c(3,3))
+library(lattice) 
+xyplot(Data$X1 ~ Data$X2, groups = Data$Class)
+xyplot(Data$X1 ~ Data$X3, groups = Data$Class)
+xyplot(Data$X1 ~ Data$X4, groups = Data$Class)
+xyplot(Data$X1 ~ Data$X5, groups = Data$Class)
+xyplot(Data$X1 ~ Data$X6, groups = Data$Class)
+xyplot(Data$X1 ~ Data$X7, groups = Data$Class)
+xyplot(Data$X1 ~ Data$X8, groups = Data$Class)
+xyplot(Data$X1 ~ Data$X9, groups = Data$Class)
+xyplot(Data$X2 ~ Data$X3, groups = Data$Class)
+```
+
+```{r, out.width = "200%", out.hight = "100%",dpi = 200,fig.width=15,fig.hight=15}
+library(MASS)
+den1 <- kde2d(Data$X1, Data$X2,n=60)
+persp(den1$x,den1$y,den1$z, xlab="X1", ylab="X2", zlab="Density", theta= 30, col=rainbow(15))
+```
+
+
+```{r, out.width = "200%", out.hight = "100%",dpi = 200,fig.width=15,fig.hight=15}
+library(ggplot2)
+library(GGally)
+ggpairs(Data[, 2:4])
+```
+
+```{r include=FALSE}
+cat(red("*** The rlationship btween the type of cancer \"Class\"  with other factors  **** \n \n"))
+library(dplyr)
+mydata2 <-Data
+```
+
+```{r, out.width = "200%", out.hight = "100%",dpi = 200,fig.width=15,fig.hight=15}
+attach(mydata2)
+library(car)
+scatterplotMatrix( ~X1+X2+X3+X4+X5+X6+X7+X8+X9|Class , data=mydata2, diagonal=list(method="boxplot" ) ,regLine = list(method=lm, lty=1,lwd=2,col="red"), smooth=list(smoother=loessLine, spread=FALSE,lty.smooth=2,lwd.smooth=1.5, lty.spread=3, lwd.spread=.5),main="Scatterplot Matrix")
+```
+
+
+
+
+
+
+  **************************************************************************************************************************************************************************************************************************************************************
+
+
+
+
+
+
+```{r}
+# Groupby function for dataframe in R
+mydata2$Type[mydata2$Class==2]  <- "benign" 
+mydata2$Type[mydata2$Class==4]  <- "malignant" 
+ length(which(mydata2$Class=="malignant" ))
+ length(which(mydata2$Class=="benign" ))
+ head(mydata2)
+```
+
+```{r}
+cat(red("Here we notice that if Clump Thickness is high , the possibility to have malignant cancer is higher "))
+```
+
+
+```{r}
+
+summarise_at(group_by(mydata2,Class),vars(X1),list(~ mean(., trim = .2), ~ median(., na.rm = TRUE)))
+
+# Groupby function for dataframe in R
+
+
+
+
+
+```
+
+
+
+```{r}
+cat(red("Here we notice that if Uniformity of Cell Size is high , the possibility to have malignant cancer is higher"))
+```
+
+
+```{r}
+
+summarise_at(group_by(mydata2,Class),vars(X2),list(~ mean(., trim = .2), ~ median(., na.rm = TRUE)))
+```
+
+
+
+
+
+```{r}
+cat(red("
+Here we notice that if Marginal Adhesion is high , the possibility to have malignant cancer is higher"))
+```
+
+
+```{r}
+# Groupby function for dataframe in R
+mydata2$Class[mydata2$Class==2]  <- "benign" 
+mydata2$Class[mydata2$Class==4]  <- "malignant" 
+summarise_at(group_by(mydata2,Class),vars(X4),list(~ mean(., trim = .2), ~ median(., na.rm = TRUE)))
+```
+
+
+
+
+
+```{r}
+cat(red("Here we notice that if Bland Chromatin is high , the possibility to have malignant cancer is higher"))
+```
+
+
+```{r}
+# Groupby function for dataframe in R
+mydata2$Class[mydata2$Class==2]  <- "benign" 
+mydata2$Class[mydata2$Class==4]  <- "malignant" 
+summarise_at(group_by(mydata2,Class),vars(X7),list(~ mean(., trim = .2), ~ median(., na.rm = TRUE)))
+```
+
+
+
+```{r}
+cat(red("Here we notice that if Normal Nucleoli is high , the possibility to have malignant cancer is higher"))
+```
+
+
+```{r}
+# Groupby function for dataframe in R
+mydata2$Class[mydata2$Class==2]  <- "benign" 
+mydata2$Class[mydata2$Class==4]  <- "malignant" 
+summarise_at(group_by(mydata2,Class),vars(X8),list(~ mean(., trim = .2), ~ median(., na.rm = TRUE)))
+
+```
+
+
+```{r, out.width = "200%", out.hight = "100%",dpi = 200,fig.width=15,fig.hight=15}
+library(lattice) 
+myPars <- list(superpose.symbol = list(pch =mydata2$Class, col = c("red", "blue")))
+splom(mydata2[,2:10], groups = mydata2$Class, subset = TRUE, panel = panel.superpose,
+    auto.key = list(title="By cancer type", columns=2),
+    par.settings = myPars)
+
+```
+
+
+```{r,include=FALSE}
+#install.packages("TeachingDemos")
+library(TeachingDemos)  # need package TeachingDemos installed
+ library(aplpack)
+```
+
+
+
+
+```{r dpi=400}
+#faces(mydata2[,2:10]) 
+```
+
+
+***********************************************************************************************************************************************
+```{r}
+cat(red("*** Normality Tests for Statistical Analysis *** \n \n
+** we need do the univarite normality tests for all three margins: \n"))
+```
+
+```{r, out.width = "200%", out.hight = "100%",dpi = 200,fig.width=15,fig.hight=15}
+par(mfrow=c(3,3))
+qqpoints=qqnorm((Data$X1),lwd=2, main="QQ-plot for X1" )
+qqline((Data$X1),col="blue", cex=2, lwd=2)
+
+qqpoints=qqnorm((Data$X2),lwd=2, main="QQ-plot for X2" )
+qqline((Data$X2),col="blue", cex=2, lwd=2)
+
+qqpoints=qqnorm((Data$X3),lwd=2, main="QQ-plot for X3" )
+qqline((Data$X3),col="blue", cex=2, lwd=2)
+
+qqpoints=qqnorm((Data$X4),lwd=2, main="QQ-plot for X4" )
+qqline((Data$X4),col="blue", cex=2, lwd=2)
+
+
+qqpoints=qqnorm((Data$X5),lwd=2, main="QQ-plot for X5" )
+qqline((Data$X5),col="blue", cex=2, lwd=2)
+
+
+qqpoints=qqnorm((Data$X6),lwd=2, main="QQ-plot for X6" )
+qqline((Data$X6),col="blue", cex=2, lwd=2)
+qqpoints=qqnorm((Data$X7),lwd=2, main="QQ-plot for X7" )
+qqline((Data$X7),col="blue", cex=2, lwd=2)
+
+qqpoints=qqnorm((Data$X8),lwd=2, main="QQ-plot for X8" )
+qqline((Data$X8),col="blue", cex=2, lwd=2)
+
+qqpoints=qqnorm((Data$X9),lwd=2, main="QQ-plot for X9" )
+qqline((Data$X9),col="blue", cex=2, lwd=2)
+
+```
+```{r}
+#install.packages("nortest")
+library(nortest)
+cat(red("Based on Anderson-Darling test, all marginal variables are NOT normally distributed (SMALL p-values). \n \n"))
+ad.test(mydata2[,2])$p.value
+ad.test(mydata2[,3])$p.value
+ad.test(mydata2[,4])$p.value
+ad.test(mydata2[,5])$p.value
+ad.test(mydata2[,6])$p.value
+ad.test(mydata2[,7])$p.value
+ad.test(mydata2[,8])$p.value
+ad.test(mydata2[,9])$p.value
+ad.test(mydata2[,10])$p.value
+```
+
+
+
+*************************************************************************************************************************************************************************************************************************************
+
+
+
+```{r}
+cat(red("** check whether or not they are following multivariate normal."))
+```
+
+
+```{r}
+cat(red('1. The chi-square QQ-plot \n'))
+source("qqchi2.R")
+qqchi2(mydata2[,2:10])
+```
+
+```{r}
+cat(blue("NOTE:"))
+cat(("
+correlation coefficient:  0.9515688 Based on the qq plot, we can see that the values of d2 j are not close to the Chi-square distribution with 9 degree of freedom (the values are not deviated from the straight line), this might be a good indication that nine-variate data has not a multivariate normal distribution. Now, let’s try some multivarite normal tests:"))
+```
+
+```{r,include=FALSE}
+library(MASS)
+library(boot)
+set.seed(2244)
+```
+
+```{r}
+cat(red("2.MLEs for Multivariate Normal distribution \n \n"))
+
+source("testnormality.R")
+cat(red("p.value is :\n"))
+testnormality(mydata2[,2:10])
+```
+
+
+```{r}
+#install.packages("energy" )
+cat(red("3.Energy test of multivariate normality \n \n"))
+library(energy)
+mvnorm.etest(mydata2[,2:10], R=999)
+```
+
+
+```{r,include=FALSE}
+library(QuantPsyc)
+```
+
+
+
+```{r}
+cat(red("4.Test for multivariate skewness and kurtosis \n \n"))
+mn <- mult.norm(mydata2[,2:10], chicrit=0.001) # X is the Stiffness of boards data set
+mn$mult.test
+```
+```{r}
+cat(red("5.Test for Mardia's multivariate tests \n \n"))
+library(QuantPsyc)
+mult.norm(mydata2[,2:10],chicrit=0.001)$mult.test
+```
+
+```{r}
+source("qqbeta.R")
+cat (red("6.QQ-plot of Beta for  stiffness data"))
+qqbeta(mydata2[,2:10])
+```
+
+
+
+```{r,include=FALSE}
+#install.packages("DescTools")
+library(DescTools)
+```
+
+```{r}
+cat (red("7.Hotellings T^2 Test"))
+HotellingsT2Test(mydata2[,2:10],test="chi")
+```
+
+
+
+
+
+```{r}
+cat (blue("NOTE: \n "))
+cat("All of the multivariate tests above are having a small p-value, which would not reject the null hypothesis that the data are not following a multivariate normal distribution.")
+```
+
+**************************************************************************************************************************************************************************************************************************
+
+```{r, include=FALSE}
+#install.packages("asbio")
+
+library(asbio)
+
+attach(Data)
+## Loading required package: tcltk
+```
+
+
+```{r, out.width = "200%", out.hight = "100%",dpi = 200,fig.width=15,fig.hight=15}
+par(mfrow=c(1,2))
+bv.boxplot(Data$X1,Data$X8,ID.out = TRUE, robust = TRUE, D = 7,  pch = 21, bg.out='blue', bg = "red",  hinge.col = 1, fence.col = 1,hinge.lty = 2, fence.lty = 3,  names = unlist(strsplit( paste(utilities[,1]), split=", ")), cex.ID.out = 0.7, uni.CI = FALSE, uni.conf = 0.95,uni.CI.col = 1, uni.CI.lty = 1, uni.CI.lwd = 2, show.points = TRUE,ylab="X1", xlab="X8")
+bv.boxplot(Data$X1,Data$X2,ID.out = TRUE, robust = TRUE, D = 7,  pch = 21, bg.out='blue', bg = "red",  hinge.col = 1, fence.col = 1,hinge.lty = 2, fence.lty = 3, cex.ID.out = 0.7, uni.CI = FALSE, uni.conf = 0.95,uni.CI.col = 1, uni.CI.lty = 1, uni.CI.lwd = 2, show.points = TRUE,ylab="X1", xlab="X2")
+```
+
+
+
+
+
+
+
+```{r, out.width = "200%", out.hight = "100%",dpi = 200,fig.width=15,fig.hight=15}
+bv.boxplot(Data$X3,  Data$X4, main="Scatterplot 1", ID.out = TRUE,bg.out ="green", xlab="X3", ylab="X4", pch=19) 
+```
+
+
+
+
+
+
+```{r, out.width = "200%", out.hight = "100%",dpi = 200,fig.width=15,fig.hight=15}
+par(mfrow=c(1,3))
+bv.boxplot(X5,  X7, main="Scatterplot 1", ID.out = TRUE,bg.out ="green", xlab="X5", ylab="X7", pch=19) 
+bv.boxplot(X5,  X8, main="Scatterplot 1", ID.out = TRUE,bg.out ="green", xlab="X5", ylab="X8", pch=19) 
+bv.boxplot(X5,  X9, main="Scatterplot 1", ID.out = TRUE,bg.out ="green", xlab="X5", ylab="X9", pch=19) 
+
+```
+
+
+
+
+
+
+
+```{r, out.width = "200%", out.hight = "100%",dpi = 200,fig.width=15,fig.hight=15}
+par(mfrow=c(1,3))
+bv.boxplot(X7,  X8, main="Scatterplot 1", ID.out = TRUE,bg.out ="green", xlab="X7", ylab="X8", pch=19) 
+bv.boxplot(X7,  X9, main="Scatterplot 1", ID.out = TRUE,bg.out ="green", xlab="X7", ylab="X9", pch=19) 
+bv.boxplot(X8,  X9, main="Scatterplot 1", ID.out = TRUE,bg.out ="green", xlab="X8", ylab="X9", pch=19) 
+```
+
+
+
+
+
+
+```{r, out.width = "200%", out.hight = "100%",dpi = 200,fig.width=15,fig.hight=15}
+#install.packages("asbio")
+
+library(asbio)
+data2= Data[-c(186,347,509,321,582,509,355,684,85,505,344,185,503,500,342,184,497,340,183), ]
+par(mfrow=c(1,2))
+bv.boxplot(data2$X1,data2$X8, ID.out = TRUE, robust = TRUE, D = 7,  pch = 21, bg.out='blue', bg = "red",  hinge.col = 1, fence.col = 1,hinge.lty = 2, fence.lty = 3,  names = unlist(strsplit( paste(utilities[,1]), split=", ")), cex.ID.out = 0.7, uni.CI = FALSE, uni.conf = 0.95,uni.CI.col = 1, uni.CI.lty = 1, uni.CI.lwd = 2, show.points = TRUE,ylab="X1", xlab="X8")
+
+
+bv.boxplot(data2$X1,data2$X2, ID.out = TRUE,robust = TRUE, D = 7,  pch = 21, bg.out='blue', bg = "red",  hinge.col = 1, fence.col = 1,hinge.lty = 2, fence.lty = 3,  names = unlist(strsplit( paste(utilities[,1]), split=", ")), cex.ID.out = 0.7, uni.CI = FALSE, uni.conf = 0.95,uni.CI.col = 1, uni.CI.lty = 1, uni.CI.lwd = 2, show.points = TRUE,ylab="X1", xlab="X2")
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+*************************************************************************************************************************************************************************************************************************************************
+
+```{r}
+cat (red("Confidence Regions: \n \n"))
+
+cat(red("1.Simultaneous Confidence Intervals based on T^2 \n"))
+```
+
+
+```{r}
+#install.packages("mvdalab")
+
+library(mvdalab)
+
+
+MVcis(Data[,2:10],include.zero=T, level=0.95)
+```
+
+
+
+```{r}
+
+cat(red("2.Calculate Bonferroni Confidence Intervals\n \n"))
+alpha=0.05
+nc=ncol(Data[,2:10])
+nr=nrow(Data[,2:10])
+xbar2=colMeans(Data[,2:10])
+xvar=var(Data[,2:10])
+se=sqrt(diag(xvar))/sqrt(nr)
+bonfcr=matrix(0,nc,2)
+q=1-(alpha/(2*nc))
+cr=qt(q,(nr-1))
+for (i in 1:nc)
+{
+bonfcr[i,1]=xbar2[i]-cr*se[i]
+bonfcr[i,2]=xbar2[i]+cr*se[i]
+}
+bonfcr
+```
+
+
+
+
+
+
+```{r}
+cat(red("3. one-at-a-time confidence intervals \n \n"))
+
+indvcr=matrix(0,nc,2)
+q=1-(0.05/2)
+cr=qt(q,(nr-1))
+for (i in 1:nc){
+indvcr[i,1]=xbar2[i]-cr*se[i]
+indvcr[i,2]=xbar2[i]+cr*se[i]
+}
+indvcr
+```
+```{r}
+cat (blue("NOTE\n"))
+cat(("we will use chi square distribution instead to F-distribution because it is not normal \n"))
+```
+
+
+```{r}
+cat(red("4.Calculate Confidence Intervals based on chi-distrbution insted to f-distrbution \n \n"))
+chi_=matrix(0,nc,2)
+cr=sqrt(qchisq((1-alpha),nc))
+for (i in 1:nc)
+{
+chi_[i,1]=xbar2[i]-cr*se[i]
+chi_[i,2]=xbar2[i]+cr*se[i]
+}
+chi_
+```
+
+
+*******************************************************************************************************************************************************************************************
+
+
+```{r}
+X <- Data[,2:10]
+n <- nrow(X)
+p <- ncol(X)
+xbar <- colMeans(X)
+S <- cov(X)
+```
+
+
+
+```{r}
+
+
+T.ci <- function(mu, Sigma, n, avec=rep(1,length(mu)), level=0.95){
+  p <-length(mu)
+  if(nrow(Sigma)!=p) stop("Need length(mu) == nrow(Sigma).")
+  if(ncol(Sigma)!=p) stop("Need length(mu) == ncol(Sigma).")
+  if(length(avec)!=p) stop("Need length(mu) == length(avec).")
+  if(level <=0 | level >= 1) stop("Need 0 < level < 1.")
+  cval <- qf(level, p, n-p)*p*(n-1) / (n-p)
+  zhat <- crossprod(avec, mu)
+  zvar <- crossprod(avec, Sigma %*% avec) / n
+  const <- sqrt(cval*zvar)
+  c(lower = zhat - const, upper = zhat + const)}
+```
+
+```{r}
+TCI <- tCI <- bon <- NULL
+alpha <- 1 - (0.05/(2*n))
+for(k in 1:p){
+  avec <- rep(0, p)
+  avec[k] <- 1
+  TCI <- c(TCI, T.ci(xbar, S, n, avec))
+  tCI <- c(tCI,
+           xbar[k] - sqrt(S[k,k]/n)*qt(0.975, df=n-1),
+           xbar[k] + sqrt(S[k,k]/n)*qt(0.975, df=n-1))
+  bon <- c(bon,
+           xbar[k] - sqrt(S[k,k]/n)*qt(alpha, df=n-1),
+           xbar[k] + sqrt(S[k,k]/n)*qt(alpha, df=n-1))
+}
+```
+
+
+
+```{r}
+chi <- NULL
+for(k in 1:p){
+  chi <- c(chi,
+           xbar[k] - sqrt(S[k,k]/n)*sqrt(qchisq(0.95, df=p)),
+           xbar[k] + sqrt(S[k,k]/n)*sqrt(qchisq(0.95, df=p)))
+}
+
+
+
+```
+
+
+
+
+```{r}
+cat(red("*** using different code *** \n \n"))
+rtab <- rbind(TCI,  bon,tCI,chi)
+rtab
+```
+
+
+
+
+****************************************************************************************************************************************************************************************************************************************************************
+
+
+
+```{r}
+cat(red("*** Multivariate of Two-Sample Tests *** \n"))
+cat(red("*** Confidence Interval for Two Independent Samples (different sample sizes) *** \n"))
+cat(red("*** test H0 : µ1 = µ2 versus Ha : µ1 ≠ µ2. *** \n"))
+```
+
+
+
+
+
+
+```{r}
+cat(blue("NOTE \n"))
+cat(("order the data based on Class column\n\n"))
+data1 <- Data[order(Class),] 
+benign=data1[1:458,2:10] 
+malignant=data1[459:691,2:10]
+```
+
+```{r}
+T.test <- function(X, Y=NULL, mu=0, paired=FALSE, asymp=FALSE, var.equal=TRUE){
+if(is.null(Y)){
+# one-sample T^2 test: same code as before (omitted here)
+} else {
+if(paired){
+# dependent two-sample T^2 test: same code as before (omitted here)
+} else {
+# independent two-sample T^2 test
+X <- as.matrix(X)
+Y <- as.matrix(Y)
+nx <- nrow(X)
+ny <- nrow(Y)
+p <- ncol(X)
+if(p != ncol(Y)) stop("Need ncol(X) == ncol(Y).")
+if(min(nx,ny) <= p) stop("Need min(nrow(X),nrow(Y)) > ncol(X).")
+dbar <- colMeans(X) - colMeans(Y)
+if(var.equal){
+df2 <- nx + ny - p - 1
+Sp <- ((nx-1)*cov(X) + (ny-1)*cov(Y)) / (nx + ny - 2)
+T2 <- (1/((1/nx) + (1/ny))) * t(dbar - mu) %*% solve(Sp) %*% (dbar - mu)
+Fstat <- T2 / ((nx + ny - 2) * p / df2)
+} else {
+Sx <- cov(X)
+Sy <- cov(Y)
+Sp <- (Sx/nx) + (Sy/ny)
+T2 <- t(dbar - mu) %*% solve(Sp) %*% (dbar - mu)
+SpInv <- solve(Sp)
+SxSpInv <- (1/nx) * Sx %*% SpInv
+SySpInv <- (1/ny) * Sy %*% SpInv
+nudx <- (sum(diag(SxSpInv %*% SxSpInv)) + (sum(diag(SxSpInv)))^2) / nx
+nudy <- (sum(diag(SySpInv %*% SySpInv)) + (sum(diag(SySpInv)))^2) / ny
+nu <- (p + p^2) / (nudx + nudy)
+df2 <- nu - p + 1
+Fstat <- T2 / (nu * p / df2)
+}
+if(asymp){
+pval <- 1 - pchisq(T2, df=p)
+} else {
+pval <- 1 - pf(Fstat, df1=p, df2=df2)
+}
+return(data.frame(T2=as.numeric(T2), Fstat=as.numeric(Fstat),
+df1=p, df2=df2, p.value=as.numeric(pval),
+type="ind-sample", asymp=asymp, var.equal=var.equal, row.names=""))
+} # end if(paired)
+} # end if(is.null(Y))
+} # end T.test function
+```
+
+
+
+```{r}
+cat(blue("NOTE \n"))
+cat("asymptotically works for non-normal multivariate\n\n")
+cat(red("Multivariate Independent Samples T^2 Test\n\n"))
+T.test(benign, malignant,asymp=TRUE)
+```
+
+
+```{r}
+cat(red("Multivariate Independent Samples T^2 Test Inferences when Σ1 ≠ Σ2.\n\n"))
+T.test(benign, malignant, var.equal=FALSE,asymp=TRUE)
+```
+
+
+```{r}
+cat(red("** using different code \n"))
+library(DescTools)
+HotellingsT2Test( benign,malignant,test="chi")
+```
+
+
+*************************************************************************************************************************************************************************************************
+
+```{r}
+cat(red("*** Multivariate of Two-Sample Tests *** \n"))
+cat(red("*** Confidence Interval for Two Independent Samples (different sample sizes) *** \n"))
+cat(red("*** test H0 : Σ1 = Σ2 versus Ha : Σ1 ≠ Σ2. *** \n"))
+```
+
+```{r, include=FALSE}
+
+library(MVTests)
+```
+
+```{r}
+
+BoxM(data= log(Data[,2:10]),group=Data[,11])
+
+
+#install.packages("rpanel", dependencies = TRUE)
+#install.packages("Rcpp", dependencies = TRUE)
+#install.packages("classInt", dependencies = TRUE)
+#install.packages("SpatialEpi", dependencies = TRUE)
+#install.packages("biotools", dependencies = TRUE)
+#library(biotools)
+#boxM(mydata2[,2:10],mydata2[,11])
+cat(blue("NOTE \n"))
+cat("The Box-M statistic is inf with p-value zero. Thus, the null hypothesis is rejected at the 5% level.")
+
+```
+
+
+
+**************************************************************************************************************************************************************************************************
+
+
+```{r}
+X <- as.matrix(benign)
+Y <- as.matrix(malignant)
+nx <- nrow(X)
+ny <- nrow(Y)
+nc=ncol(malignant)
+nr=nrow(malignant)
+xbar2=colMeans(malignant)-colMeans(benign)
+xvar=((nx-1)*cov(X) + (ny-1)*cov(Y)) / (nx + ny - 2)
+se=sqrt(diag(xvar))/sqrt(nr)
+```
+
+
+```{r}
+cat(red("*** Two sample confidence interval calculator ***"))
+```
+
+```{r}
+cat(red("1.Calculate Bonferroni Confidence Intervals\n \n"))
+alpha=0.05
+bonfcr=matrix(0,nc,2)
+q=1-(alpha/(2*nc))
+cr=qt(q,(nr-1))
+for (i in 1:nc)
+{
+bonfcr[i,1]=xbar2[i]-cr*se[i]
+bonfcr[i,2]=xbar2[i]+cr*se[i]
+}
+bonfcr
+```
+
+
+
+
+```{r}
+cat(red("2.Calculate Confidence Intervals based on chi-distrbution  \n \n"))
+chi_=matrix(0,nc,2)
+cr=sqrt(qchisq((1-alpha),nc))
+for (i in 1:nc)
+{
+chi_[i,1]=xbar2[i]-cr*se[i]
+chi_[i,2]=xbar2[i]+cr*se[i]
+}
+chi_
+```
+
+
+
+```{r}
+cat(red("3. one-at-a-time confidence intervals \n \n"))
+indvcr=matrix(0,nc,2)
+q=1-(0.05/2)
+cr=qt(q,(nr-1))
+for (i in 1:nc){
+indvcr[i,1]=xbar2[i]-cr*se[i]
+indvcr[i,2]=xbar2[i]+cr*se[i]
+}
+indvcr
+```
+
+
+
+**************************************************************************************************************************************************************************************************************************************************
+
+```{r}
+cat(red("*** One Way MANOVA *** \n\n"))
+cat(blue("Research Question: \n" ))
+
+cat("Do dependent variable 1 until  dependent variable 9 differ by independent variable (group 1 vs. group 2)? \n \n" )
+
+cat(red("Ho: Dependent 1 until dependent variable 9 do not differ by (independent variable (group 1 vs. group 2). \n"))
+
+cat (green("Ha: Dependent 1 until dependent variable 9 differ by independent variable (group 1 vs. group 2). \n \n \n"))
+library(crayon)
+library(car)
+fit.manova <- manova(cbind(X1,X2,X3,X4,X5,X6,X8,X9) ~ Class, data = Data)
+
+summary(fit.manova)
+```
+
+
+```{r}
+cat(red("*** One Way ANOVA *** \n\n"))
+cat(blue("Research Question: \n" ))
+
+cat("Is there a statistically significant difference on a dependent variable by independent variable? \n \n")
+
+cat(red("Ho: There is not a statistically significant difference on a dependent variable by independent variable (group 1 vs. group 2)? \n" ))
+cat(green("Ha: There is a statistically significant difference on a dependent variable by independent variable (group 1 vs. group 2)? \n \n\n" ))
+```
+
+
+
+```{r}
+#install.packages("crayon")
+library(crayon)
+library(car)
+
+mod <- lm( cbind(X1,X2,X3,X4,X5,X6,X8,X9) ~ Class,data=Data)
+fit1 <- Anova(mod, type=2)
+fit1
+```
+
+
+
+```{r, include=FALSE}
+
+library(crayon)
+library(car)
+attach(Data)
+Factor1=factor(Class)
+```
+
+
+
+```{r}
+cat(red(" Study the effect the feature X1 on independent variable Class \n\n "  ))
+fit.anova1 <- aov( X1~ Factor1, data=Data)
+summary(fit.anova1)
+```
+
+```{r}
+cat(red(" Study the effect the feature X2 on independent variable Class \n\n"  ))
+fit.anova1 <- aov( X2~ Factor1, data=Data)
+summary(fit.anova1)
+```
+
+
+```{r}
+cat(red(" Study the effect the feature X3 on independent variable Class \n\n"  ))
+fit.anova1 <- aov( X3~ Factor1, data=Data)
+summary(fit.anova1)
+```
+
+
+```{r}
+cat(red(" Study the effect the feature X4 on independent variable Class \n\n"  ))
+fit.anova1 <- aov( X4~ Factor1, data=Data)
+summary(fit.anova1)
+```
+
+
+```{r}
+cat(red(" Study the effect the feature X5 on independent variable Class \n\n"  ))
+fit.anova1 <- aov( X5~ Factor1, data=Data)
+summary(fit.anova1)
+```
+
+```{r}
+cat(red(" Study the effect the feature X6 on independent variable Class \n\n"  ))
+fit.anova1 <- aov( X6~ Factor1, data=Data)
+summary(fit.anova1)
+```
+
+
+```{r}
+cat(red(" Study the effect the feature X7 on independent variable Class \n\n"  ))
+fit.anova1 <- aov( X7~ Factor1, data=Data)
+summary(fit.anova1)
+```
+
+```{r}
+cat(red(" Study the effect the feature X8 on independent variable Class \n\n"  ))
+fit.anova1 <- aov( X8~ Factor1, data=Data)
+summary(fit.anova1)
+```
+
+```{r}
+cat(red(" Study the effect the feature X9 on independent variable Class \n\n"  ))
+fit.anova1 <- aov( X9~ Factor1, data=Data)
+summary(fit.anova1)
+```
+
+
+```{r}
+cat(blue("NOTE \n\n"))
+cat("The results show that the significant contributions to all features (X1 TO X9) are the Class. \n")
+```
+
+
+
+
+
+
+*****************************************************************************************************************************************************************************************************
+```{r}
+cat(red("The Bonferroni simultaneous confidence intervals for each feature effects are obtained in below \n\n"))
+fit.manova.summary=summary(fit.manova)
+SSP.res=fit.manova.summary$SS$Residuals
+SSP.res
+```
+
+
+```{r,include=FALSE}
+#emm_options(opt.digits = FALSE)
+#install.packages("lsmeans")
+ library(emmeans)
+library(lsmeans)
+attach(Data)
+Factor1=factor(Class)
+droplevels(Factor1)
+```
+
+
+
+```{r}
+cat(red(" you could obtain the Bonferroni simultaneous confidence intervals for each feature Effect as follows
+\n"))
+
+X= as.matrix(Data [, c("X1","X2","X3","X4","X5","X7","X8","X9")])
+mod= lm(X ~ Factor1 )
+p <- ncol(X)
+
+lsm.F1<- vector("list", p)
+names(lsm.F1) <- colnames(X)
+for(j in 1:p){
+wts <- rep(0, p*1)
+wts[1:1 ] <- 1
+lsm.F1[[j]] <- lsmeans(mod, "Factor1", weights= wts )
+}
+
+
+
+lsm.FA <- vector("list", p)
+names(lsm.FA) <- colnames(X)
+for(j in 1:p){
+wts <- rep(1, p*1)
+wts[1:1 ] <- 0
+lsm.FA[[j]] <- lsmeans(mod, "Factor1", weights= wts )
+}
+
+
+
+q <- p * 2 * (2-1)/2
+alp <- 0.05 / (2*q)
+# Bonferroni pairwise CIs for Factor 1
+CI2= rbind( confint(contrast(lsm.F1[[1]], "pairwise"), level=1-alp, adj="none") ,
+confint(contrast(lsm.FA[[1]], "pairwise"), level=1-alp, adj="none") )
+NN=c("X1", "X2", "X3","X4","X5","X7","X8","X9" )
+CI2[, c(3,5,6)]=format(round( ( CI2[, c(3,5,6)]),5), nsmall = 5)
+CI2= data.frame( NN, CI2)
+CI2
+
+```
+
+
+
+
+
+
+
+
+
+****************************************************************************************************************************************************************************************************************************************************************
+
+
+```{r}
+cat(red("*** Multiple Linear Regression *** \n"))
+```
+
+
+```{r}
+fit1<- lm(Class~X1+X2+X3+X4+X5+X6+X7+X8+X9,data = Data)
+summary(fit1)
+```
+
+```{r}
+confint(fit1)
+```
+
+
+
+```{r}
+cat(red ("The fitted model is: \n \n"))
+```
+
+
+```{r, out.width = "200%", out.hight = "100%",dpi = 200,fig.width=15,fig.hight=15}
+
+par(mfrow=c(1,2))
+plot(fit1$fitted,fit1$resid, lwd=2, col="blue")
+plot(density(fit1$resid), lwd=2, col="blue")
+```
+
+
+```{r, out.width = "200%", out.hight = "100%",dpi = 200,fig.width=15,fig.hight=15}
+par(mfrow=c(2,2))
+plot(fit1, lwd=2, col = "blue")
+```
+
+
+
+
+
+```{r}
+cat(red("The residuals are not normal distributed! \n"))
+shapiro.test(fit1$resid)
+```
+
+
+
+```{r}
+cat(blue("NOTE \n"))
+cat(" in this case, the Class is classeied as  benign \n \n")
+newdata = data.frame(X1=.95, X2=.95,X3=.95,X4=.95,X5=.95,X6=.95,X7=.95,X8=.95,X9=.95)
+predict(fit1,new= newdata,interval='prediction')
+
+```
+
+
+
+
+```{r}
+cat(red("Confidence and Prediction Intervals \n\n"))
+cat (red("first:Prediction \n\n "))
+cat(blue("NOTE \n"))
+cat(" in this case, the Class is classeied as malignant \n \n")
+newdata = data.frame(X1=10, X2=10,X3=10,X4=10,X5=10,X6=10,X7=10,X8=10,X9=10)
+predict(fit1,new= newdata,interval='prediction')
+
+```
+
+
+```{r}
+cat(blue("NOTE \n"))
+cat(" in this case, the Class is classeied as  benign \n \n")
+newdata = data.frame(X1=.95, X2=.95,X3=.95,X4=.95,X5=.95,X6=.95,X7=.95,X8=.95,X9=.95)
+predict(fit1,new= newdata,interval='confidence')
+
+```
+
+
+
+
+```{r}
+cat(red("second :Confidence \n\n"))
+cat(blue("NOTE \n"))
+cat(" in this case, the Class is classeied as malignant \n \n")
+newdata = data.frame(X1=10, X2=10,X3=10,X4=10,X5=10,X6=10,X7=10,X8=10,X9=10)
+predict(fit1,new= newdata,interval='confidence')
+
+```
+****************************************************************************************************************************************************************************************************
+
+
+```{r}
+cat(red("*** Principal Components Analysis *** \n \n"))
+```
+
+
+
+
+
+```{r,include=FALSE}
+library(robustHD)
+```
+
+
+```{r}
+#install.packages("robustHD")
+cat(red("*** PCA of correlation matrix *** \n\n"))
+cat(red(" we obtain the sample correlation matrix R for these data, and determine its eigenvalues .and eigenvectors. \n\n"))
+
+#x<-standardize(data[,2:8],centerFun = mean, scaleFun = sd)
+#data[,2:8]<-(-1)*data[,2:8]#resign lower scores correspond better berformane
+x<-Data[,2:10] 
+cor(x)
+```
+
+
+
+```{r}
+
+A<-cor(x)
+Eigenvalues <- eigen(A)$values
+cat(red("Eigenvalues are: \n\n"))
+Eigenvalues
+#A
+```
+
+
+```{r}
+Eigenvectors <- eigen(A)$vectors
+cat(red("Eigenvectors are: \n\n"))
+Eigenvectors
+```
+
+
+
+
+```{r}
+p1 <- princomp(x, cor = TRUE)  ## using correlation matrix
+summary(p1)
+```
+
+
+
+```{r}
+# PCA on correlation matrix
+pcaCOR <- princomp(x=Data[,2:10], cor=TRUE)
+# resign PCA solution
+pcsign <- sign(colSums(pcaCOR$loadings^3))
+pcaCOR$loadings <- pcaCOR$loadings %*% diag(pcsign)
+pcaCOR$loadings
+```
+
+*** The total sample variance explained by the first six sample variances is  approximately $92.8\%$ of the total sample variance. According to the outputs above, the first six principal combonents for the standardized variables is given as below. 
+
+\[y_1^{*}= e_1^{*}X=0.3106167 X1 + 0.3949342 X2 +  0.3896742X3 + 0.3384939 X4 + 0.3492368 X5 + 0.2248964 X6 + 0.3551379 X7 + 0.3518838 X8 + 0.2421370 X9\]
+$y_2^{*}= e_2^{*}X=0.115560287 X1 -0.008042624 X2 + 0.020683220X3 -0.187415308 X4 -0.145715316 X5 + 0.800332034 X6 +0.046591643 X7 + 0.018955246 X8 -0.535475903 X9$
+$y_3^{*}= e_3^{*}X=-0.10357068 X1 -0.12446943  X2 -0.13498279  X3 -0.19433955  X4 + 0.05402837 X5 + 0.50582628 X6 -0.29079127  X7  -0.03680689 X8 + 0.75703280 X9$
+$y_4^{*}= e_4^{*}X=0.88942040X1 -0.01832534 X2 + 0.03409435 X3 -0.32594990 X4 -0.14720369 X5 -0.15876554  X6 -0.15243440 X7 -0.15050751 X8 +  0.09179097 X9$
+$y_5^{*}= e_5^{*}X=0.13307153 X1 -0.09940433  X2 -0.10234161  X3+ 0.66695961 X4  -0.56010138X5 + 0.13818405 X6 + 0.18179987 X7 -0.35669070 X8 + 0.15496444 X9$
+$y_6^{*}= e_6^{*}X=-0.03267568X1 -0.11558871X2 -0.06507698 X3 -0.18730854  X4 -0.58049041 X5 -0.08514393 X6 + 0.21398418 X7 +0.73385743 X8 +0.13303188 X9$
+
+
+
+```{r}
+# ++++++++++++++++++++++++++++
+# flattenCorrMatrix
+# ++++++++++++++++++++++++++++
+# cormat : matrix of the correlation coefficients
+# pmat : matrix of the correlation p-values
+flattenCorrMatrix <- function(cormat, pmat) {
+  ut <- upper.tri(cormat)
+  data.frame(
+    row = rownames(cormat)[row(cormat)[ut]],
+    column = rownames(cormat)[col(cormat)[ut]],
+    cor  =(cormat)[ut],
+    p = pmat[ut]
+    )
+}
+```
+
+
+
+
+```{r}
+#install.packages("Hmisc")
+library("Hmisc")
+S<-rcorr(as.matrix(x), type = c("pearson"))
+flattenCorrMatrix(S$r, S$P)
+```
+
+
+```{r}
+Data$scores <- p1$scores[,1]
+df_sorted_names_asc <- Data[with(Data, order(scores)), ] 
+y<-df_sorted_names_asc[c(1,11,12)]
+z<-na.omit(y)
+z
+```
+
+
+```{r, out.width = "200%", out.hight = "100%",dpi = 200,fig.width=15,fig.hight=15}
+#install.packages("ggfortify")
+library(ggfortify)
+autoplot(prcomp(Data[,2:8],scale = TRUE), data = data1,colour = 'Breed', shape = TRUE, label.size = 3,  loadings.colour = 'blue',
+         loadings.label = TRUE, loadings.label.size = 3, outlier.color = "red")
+```
+
+************************************************************************************************************************************************************************************************
+
+```{r}
+cat(red("*** PCA of covariance matrix *** \n\n"))
+cat(red(" we obtain the sample covariance  matrix R for these data, and determine its eigenvalues .and eigenvectors. \n\n"))
+#install.packages("robustHD")
+library(robustHD)
+#x<-standardize(data[,2:8],centerFun = mean, scaleFun = sd)
+x<-Data[,2:10]
+cov(x)
+```
+
+
+
+```{r}
+A<-cov(x)
+Eigenvalues <- eigen(A)$values
+cat(red("Eigenvalues are: \n \n"))
+Eigenvalues
+#A
+```
+
+
+```{r}
+Eigenvectors <- eigen(A)$vectors
+cat(red("Eigenvectors are: \n \n"))
+Eigenvectors
+```
+
+
+```{r}
+p1 <- princomp(x)  ## using covariance matrix
+summary(p1)
+```
+```{r}
+cat(red("Loadings (which should not be confused with eigenvectors) have the following properties: \n"))
+
+cat("Their sums of squares within each component are the eigenvalues (components' variances).\n")
+cat("Loadings are coefficients in linear combination predicting a variable by the (standardized) components.\n")
+
+# PCA on covariance matrix (default)
+pcaCOV <- princomp(x=Data[,2:10])
+names(pcaCOV)
+```
+
+```{r}
+#resign PCA solution
+pcsign <- sign(colSums(pcaCOV$loadings^3))
+pcaCOV$loadings <- pcaCOV$loadings %*% diag(pcsign)
+pcaCOV$loadings 
+```
+
+
+*** The total sample variance explained by the first six sample variances is  approximately $92.8\%$ of the total sample variance. According to the outputs above, the first six principal combonents for the standardized variables is given as below. 
+
+
+
+
+
+$y_1^{*}= e_1^{*}X=0.3236794 X1 + 0.4449478 X2 + 0.4283637 X3 + 0.3587123 X4 + 0.27393855 X5 + 0.1676658  X6 + 0.3178184 X7 + 0.4017347 X8 + 0.1397485 X9$
+$y_2^{*}= e_2^{*}X=0.76783955 X1 -0.03312929 X2 +0.02701938 X3 -0.51042556 X4 -0.09496559 X5 + 0.33012537 X6 -0.10801569 X7 - 0.10839923 X8 -0.05942164 X9$
+$y_3^{*}= e_3^{*}X=-0.43169732 X1 -0.05464897 X2 -0.04558182 X3 -0.35812814 X4 + 0.02593170 X5 + 0.63740285 X6 -0.04160626 X7 + 0.52098868 X8 + 0.01422342X9$
+$y_4^{*}= e_4^{*}X=-0.141916368 X1 + 0.085402875 X2 +  0.053592794 X3 +0.351172865 X4 + 0.009435063 X5 + 0.647449577 X6 + 0.049253407 X7-0.649898737 X8 -0.047929985 X9$
+$y_5^{*}= e_5^{*}X=0.2757022 X1 -0.4123807  X2 -0.3928750 X3 + 0.5178814 X4 -0.3805591 X5 + 0.1760703 X6 + 0.1399403 X7 + 0.3262109 X8 -0.1719181 X9$
+$y_6^{*}= e_6^{*}X=0.12294318 X1 -0.17170064 X2 -0.21594767 X3 +0.18383038 X4 + 0.29470087 X5 +0.07816444  X6 -0.45879674 X7 + 0.02376615 X8 +0.75561849 X9$
+
+
+According to the above results,the total sample variance explained by the first six sample variances is  approximately 93.2% of the total sample variance.
+
+** The total variance explained by the first six PCs in the covariance matrix is greater than the total variance explained by the first PCs in the correlation matrix. 
+
+
+
+
+```{r}
+
+Data$scores <- p1$scores[,1]
+df_sorted_names_asc <- Data[with(Data, order(scores)), ] 
+y<-df_sorted_names_asc[c(1,11,12)]
+z<-na.omit(y)
+z
+```
+
+
+
+
+```{r, out.width = "200%", out.hight = "100%",dpi = 200,fig.width=15,fig.hight=15}
+dev.new(width=10, height=5, noRStudioGD=TRUE)
+par(mfrow=c(1,2))
+plot(pcaCOV$loadings[,1:2],  xlab="PC1 Loaings", ylab="PC2 Loadings",type="n", main="PCA of Covariance Matrix", xlim=c(-0.15, 1.15), ylim=c(-0.15, 1.15))
+text(pcaCOV$loadings[,1:2],labels=colnames(Data[,2:10]))
+plot(pcaCOR$loadings[,1:2],xlab="PC1 Loaings", ylab="PC2 Loadings", type="n", main="PCA of Correlation Matrix", xlim=c(0.05, 0.45), ylim=c(-0.5,0.6))
+text(pcaCOR$loadings[,1:2],labels=colnames(Data[,2:10]))
+```
+
+
+
+
+```{r, out.width = "200%", out.hight = "100%",dpi = 200,fig.width=15,fig.hight=15}
+dev.new(width=10, height=5, noRStudioGD=TRUE)
+par(mfrow=c(1,2))
+plot(2:10, pcaCOV$sdev^2, type="b", xlab="# PCs", ylab="Variance of PC",main="PCA of Covariance Matrix")
+plot(2:10, pcaCOR$sdev^2, type="b", xlab="# PCs", ylab="Variance of PC",main="PCA of Correlation Matrix")
+```
+
+
+
+
+
+*****************************************************************************************************************************************************************************************************
+
+```{r}
+cat (red("*** Factor Analysis ***\n"))
+cat(" First : **factor Analysis using PCA  solution\n ")
+```
+
+
+
+```{r,include=FALSE}
+library(psych)
+library(GPArotation)
+```
+
+```{r}
+#install.packages("psych")
+#install.packages("GPArotation") 
+cat(blue("*number of factor is two rotate and non rotate"))
+
+```
+
+```{r}
+fit <- fa((Data[,2:10]), nfactors=2,rotate = "none", fm='pa',scores="tenBerge",cor="cor")
+print(fit$loading) # print results
+```
+
+
+
+```{r}
+factor <- fa(Data[,2:10],nfactors = 2,rotate = "varimax", fm='pa',scores="tenBerge",cor="cor")
+factor$loading
+```
+
+```{r, out.width = "200%", out.hight = "100%",dpi = 200,fig.width=15,fig.hight=15}
+##install.packages("psych")
+##install.packages("GPArotation")
+par(mfrow=c(1,2))
+library(psych)
+library(GPArotation)
+fit <- fa.parallel(Data[,2:10], nfactors=2, fm='pa')
+print(fit) # print results
+fa.diagram(factor)
+```
+****************************************************
+```{r}
+##install.packages("psych")
+##install.packages("GPArotation")
+
+cat(blue("*number of factor is three rotate and non rotate \n\n"))
+library(psych)
+library(GPArotation)
+fit <- fa(Data[,2:10], nfactors=3,rotate = "none", fm='pa',scores="tenBerge",cor="cor")
+print(fit$loading) # print results
+```
+```{r}
+threefactor <- fa(Data[,2:10],nfactors =3,rotate = "varimax", fm='pa',scores="tenBerge",cor="cor")
+threefactor$loading
+```
+
+
+
+```{r, out.width = "200%", out.hight = "100%",dpi = 200,fig.width=15,fig.hight=15}
+##install.packages("psych")
+##install.packages("GPArotation")
+par(mfrow=c(1,2))
+library(psych)
+library(GPArotation)
+fit <- fa.parallel(Data[,2:10], nfactors=3, fm='pa', fa='both')
+print(fit) # print results
+fa.diagram(threefactor)
+```
+
+*****************************************
+```{r}
+##install.packages("psych")
+##install.packages("GPArotation")
+
+cat(blue("*number of factor is four rotate and non rotate \n\n"))
+library(psych)
+library(GPArotation)
+fit <- fa(Data[,2:10], nfactors=4,rotate = "none", fm='pa',scores="tenBerge",cor="cor")
+print(fit$loading) # print results
+```
+```{r}
+fourfactor <- fa(Data[,2:10],nfactors =4,rotate = "varimax", fm='pa',scores="tenBerge",cor="cor")
+fourfactor$loading
+```
+
+
+```{r, out.width = "200%", out.hight = "100%",dpi = 200,fig.width=15,fig.hight=15}
+##install.packages("psych")
+##install.packages("GPArotation")
+par(mfrow=c(1,2))
+library(psych)
+library(GPArotation)
+fit <- fa.parallel(Data[,2:10], nfactors=4, fm='pa', fa='both')
+print(fit) # print results
+fa.diagram(fourfactor)
+```
+
+
+
+
+***************************************************************************************************************************************************************************************************************************************
+
+
+
+
+
+```{r}
+#install.packages("nFactors")
+cat(red( "Second: factor Analysis using maximum liklihood solution \n" ))
+
+```
+
+
+
+
+```{r}
+cat(blue("number of factor is two just rotate \n\n"))
+fit.22 <- factanal(Data[,2:10],factors=2,rotation="varimax" ,scores = "regression")
+print(fit.22, digits = 2, cutoff = .3, sort = TRUE)
+```
+
+
+```{r, out.width = "200%", out.hight = "100%",dpi = 200,fig.width=15,fig.hight=15}
+##install.packages("psych")
+##install.packages("GPArotation")
+library(psych)
+library(GPArotation)
+fit.2 <- fa.parallel(Data[,2:10], nfactors=2, fm='ml', fa='both')
+print(fit.2) # print results
+```
+
+
+
+
+***************************************
+
+```{r}
+cat(blue("number of factor is three  just rotate \n\n"))
+fit.3<- factanal(Data[,2:10],factors=3,rotation="varimax")
+print(fit.3, digits=2, cutoff=.3, sort=TRUE)
+```
+
+```{r, out.width = "200%", out.hight = "100%",dpi = 200,fig.width=15,fig.hight=15}
+##install.packages("psych")
+##install.packages("GPArotation")
+library(psych)
+library(GPArotation)
+fit.3 <- fa.parallel(Data[,2:10], nfactors=3, fm='ml', fa='both')
+print(fit.3) # print results
+```
+
+********************************
+```{r}
+cat(blue("number of factor is four just rotate\n\n"))
+fit<- factanal(Data[,2:10],factors=4,rotation="varimax")
+print(fit, digits=2, cutoff=.3, sort=TRUE)
+```
+
+
+
+```{r, out.width = "200%", out.hight = "100%",dpi = 200,fig.width=15,fig.hight=15}
+
+##install.packages("psych")
+##install.packages("GPArotation")
+library(psych)
+library(GPArotation)
+fit.4 <- fa.parallel(Data[,2:10], nfactors=4, fm='ml', fa='both')
+print(fit.4) # print results
+```
+
+ *** the result by the two methods, that is PCA and ML shows that the latter is diffecult to interpret . the factor scores for the first two factors are  better in maximum likelihood solution than PCA  solution. 
+
+
+
+*******************************************************************************************************************************************************************************************************************************************************************
+
+
+```{r}
+cat(red("*** Canonical Correlation Analysis *** \n\n"))
+cat("Canonical correlation analysis (CCA) is a multidimensional exploratory statistical method which operates on the same principle as the principal component analysis. The main purpose of the canonical correlation approach is the exploration of sample correlations between two sets of quantitative variables observed on the same experimental units. On the other hand PCA method deals with one data set only and it tries to to reduce the overall dimensionality of the dataset using some linear combination of the initial variables.")
+```
+
+
+
+```{r}
+X <- Data[,c(2,3,4,5,11)]
+Y <- Data[,c(6,7,8,9,11)]
+```
+
+
+
+
+```{r}
+R12=cor(X[,1:4],Y[,1:4], method = c("pearson", "kendall", "spearman"))
+R21=t(R12)
+R11=cor(X[,1:4], method = c("pearson", "kendall", "spearman"))
+R22=cor(Y[,1:4], method = c("pearson", "kendall", "spearman"))
+```
+
+
+
+```{r}
+# Finding the E1 and E2 matrices:
+E1 <- solve(R11) %*% R12 %*% solve(R22) %*% R21
+E2 <- solve(R22) %*% R21 %*% solve(R11) %*% R12
+```
+
+
+```{r}
+# The canonical correlations are:
+Xeig <- sqrt(eigen(E1)$values)
+Yeig <- sqrt(eigen(E2)$values)
+cat(" ### Canonical Correlation \n")
+Xeig
+Yeig
+```
+```{r}
+cat("# The canonical variates are based on the eigenvectors of E1 :\n\n")
+eigen(E1)$vectors 
+cat("\n# a1 = (0.1491751 ,0.8091378,0.4472343,0.3507483)","\n") 
+cat("# b1 = (0.2073474, -0.0670727,0.5864703,-0.7801031)  \n")
+cat("# c1 = (-0.2669547, 0.8195504,-0.4616679 ,-0.2096071)  \n")
+cat("# d1 = (-0.454931942, -0.432036992,0.778690262,0.004737334) \n \n")
+
+cat("# The canonical variates are based on the eigenvectors of E2 :\n\n")
+eigen(E2)$vectors 
+cat("\n# a2 = (-0.5790806 , -0.1199505,-0.6738946,-0.4428810)","\n") 
+cat("# b2 = (0.03587854 , -0.66790617,0.66177701,-0.33862260)  \n")
+cat("# c2 = (0.83125068,  -0.06555658, -0.39863628,-0.38185568)  \n")
+cat("# d2 = (0.006973835, -0.398485477,-0.510026600,0.762255572) \n \n")
+
+```
+
+```{r}
+cat("\n# U1 = (0.1491751 X1+0.8091378 X2 +0.4472343 X3+ 0.3507483 X4)","\n") 
+cat("# U2 = (0.2073474 X1 -0.0670727 X2 + 0.5864703 X3- 0.7801031 X4)  \n")
+cat("# U3 = (-0.2669547 X1+ 0.8195504 X2 -0.4616679 X3 - 0.2096071 X4)  \n")
+cat("# U4 = (-0.454931942 X1 -0.432036992 X2 +0.778690262 X3+0.004737334 X4) \n \n")
+cat("\n# V1 = (-0.5790806 X5 -0.1199505 X6 -0.6738946 X7-0.4428810 X8)","\n") 
+cat("# V2 = (0.03587854 X5 - 0.66790617 X6+ 0.66177701 X7 - 0.33862260 X8)  \n")
+cat("# V3 = (0.83125068 X5 - 0.06555658 X6- 0.39863628 X7 - 0.38185568 X8)  \n")
+cat("# V4 = (0.006973835 X5+ -0.398485477 X6- 0.510026600 X7 +0.762255572 X8 ) \n \n")
+
+```
+
+
+
+
+
+
+
+```{r, out.width = "200%", out.hight = "100%",dpi = 200,fig.width=15,fig.hight=15}
+u1<- solve(sqrt(R11)) %*% (eigen(E1)$vectors[,1])
+v1 <- solve(sqrt(R22)) %*% (eigen(E2)$vectors[,1])
+u2<- solve(sqrt(R11)) %*% (eigen(E1)$vectors[,2])
+v2 <- solve(sqrt(R22)) %*% (eigen(E2)$vectors[,2])
+u3<- solve(sqrt(R11)) %*% (eigen(E1)$vectors[,3])
+v3 <- solve(sqrt(R22)) %*% (eigen(E2)$vectors[,3])
+u4<- solve(sqrt(R11)) %*% (eigen(E1)$vectors[,4])
+v4 <- solve(sqrt(R22)) %*% (eigen(E2)$vectors[,4])
+par(mfrow=c(2,2))
+plot(u1,v1)
+plot(u2,v2)
+plot(u3,v3)
+plot(u4,v4)
+cor(u1,v1)
+cor(u2,v2)
+cor(u3,v3)
+cor(u4,v4)
+```
+
+
+
+
+```{r}
+## Bartlett's test for the significance of the first canonical correlation:
+## The null hypothesis is that the first (and smaller) canonical correlations are zero.
+
+my.n <- 691; my.q1 <- 4; my.q2 <- 4
+test.stat <- -( (my.n-1) - 0.5*(my.q1+my.q2+1) ) * sum(log(1-eigen(E1)$values))
+test.stat
+P.value <- pchisq(test.stat, df = my.q1*my.q2, lower.tail=F)
+P.value
+```
+
+** Since the P-value is tiny, we conclude that there is at least one  nonzero canonical correlation.
+
+***********************************************************************************************************************************************************************************************************************************************
+```{r}
+cat(red("*** Another Code  ***"))
+```
+
+
+```{r}
+#install.packages("vegan")
+#install.packages("CCA")
+#library("vegan")
+#library("CCA")
+#correl <- matcor(X, Y )
+#img.matcor(correl, type = 2)
+```
+
+
+```{r}
+#cc1 <- cancor(X, Y)  ### function from standard R instalation
+#cc2 <- cc(X, Y)      ### function for the R package 'CCA'
+```
+
+
+```{r}
+#cc1$cor  ### function from standard R instalation
+```
+
+
+```{r}
+#cc2$cor  ### function for the R package 'CCA'
+```
+
+
+```{r}
+#par(mfrow = c(1,2))
+#barplot(cc1$cor, main = "Canonical correlations for 'cancor()'", col = "gray")
+#barplot(cc2$cor, main = "Canonical correlations for 'cancor()'", col = "gray")
+```
+
+
+
+```{r}
+#cc1$xcoef  ### function from standard R instalation
+```
+
+```{r}
+#cc2$xcoef  ### function for the R package 'CCA'
+```
+```{r}
+#cc1$ycoef
+```
+
+
+```{r}
+#cc2$ycoef
+```
+
+
+```{r}
+#plt.cc(cc2, var.label = TRUE, ind.names = Data[,11])
+```
+
+
+
+```{r}
+#library(vegan)
+#cc3 <- cca(X, Y)
+```
+
+
+
+
+
+```{r}
+#plot(cc3, scaling = 1)
+```
+
+
+
+
+
+

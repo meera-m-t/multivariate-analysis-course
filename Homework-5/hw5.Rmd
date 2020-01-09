@@ -1,5 +1,5 @@
 ---
-title: "Homework-2"
+title: "Homework-5"
 header-includes:
   - \usepackage{lscape}
   - \usepackage[english]{babel}
@@ -18,7 +18,6 @@ output:
   word_document: default
 classoption: fleqn
 ---
-#Smeerah Talafha
 ```{r}
 #setwd("~/Desktop/r-583")
 ```
@@ -69,16 +68,27 @@ Eigenvectors
 ```{r}
 p1 <- princomp(x, cor = TRUE)  ## using correlation matrix
 summary(p1)
-plot(p1)
 screeplot(p1, npcs=7, type="lines")
 ```
 
 
 #b)
+
+
+```{r}
+# PCA on correlation matrix
+pcaCOR <- princomp(x=data[,2:8], cor=TRUE)
+# resign PCA solution
+pcsign <- sign(colSums(pcaCOR$loadings^3))
+pcaCOR$loadings <- pcaCOR$loadings %*% diag(pcsign)
+pcaCOR$loadings
+```
+
+
 According to the outputs above in the part(a), the first two principal combonents for the standardized variables is given as below. 
 
 \[y_{1}^{^}= e^{^}_{1}X=.378X1+.383X2+.368X3+.395X4+.389X5+.376X6+.355X7 \]
-\[y_{2}^{^}= e^{^}_{2}X=-.407X1-.414X2-.459X3+.161X4+.309X5+.423X6+.389X7 \]
+\[y_{2}^{^}= e^{^}_{2}X=.407X1+.414X2+.459X3-.161X4-.309X5-.423X6-.389X7 \]
 According to the above results,the total sample variance explained by the first two sample variances is  approximately 91.96% of the total sample variance.
 
 
@@ -187,14 +197,28 @@ Eigenvectors
 ```{r}
 p1 <- princomp(x)  ## using covariance matrix
 summary(p1)
-plot(p1)
 screeplot(p1, npcs=7, type="lines")
 ```
 
-According to the outputs above in the part(a), the first two principal combonents for the standardized variables is given as below. 
+```{r}
+# PCA on covariance matrix (default)
+pcaCOV <- princomp(x=data[,2:8])
+#resign PCA solution
+pcsign <- sign(colSums(pcaCOV$loadings^3))
+pcaCOV$loadings <- pcaCOV$loadings %*% diag(pcsign)
+pcaCOV$loadings 
+```
+
+
+
+
+
+
+
+According to the outputs above in the part(a), the first two principal combonents is given as below. 
 
 \[y_{1}^{^}= e^{^}_{1}X=.310X1+.357X2+.378X3+.299X4+.391X5+.459X6+.422X7 \]
-\[y_{2}^{^}= e^{^}_{2}X=.375X1+.433X2+.518X3-.053X4+.210X5-.395X6-.444X7 \]
+\[y_{2}^{^}= e^{^}_{2}X=.375X1+.433X2+.518X3-.053X4-.210X5-.395X6-.444X7 \]
 According to the above results,the total sample variance explained by the first two sample variances is  approximately 92.59% of the total sample variance.it can be seen that the all event conrbute equally of the first component which might be called as the way index.the second components contrasts the times for the shorter distance and the longer distance so it can be called as the distance component.Thus, the above interpretation of the covariance matrix is smilar as the results obtained in Exercise 8.18 of the text book.
 
 
@@ -308,15 +332,24 @@ Eigenvectors
 ```{r}
 p1 <- princomp(x ,cor = TRUE)  ## using covariance matrix
 summary(p1)
-plot(p1)
 screeplot(p1, npcs=8, type="lines")
+```
+
+
+```{r}
+# PCA on correlation matrix
+pcaCOR <- princomp(x=data[,2:9], cor=TRUE)
+# resign PCA solution
+pcsign <- sign(colSums(pcaCOR$loadings^3))
+pcaCOR$loadings <- pcaCOR$loadings %*% diag(pcsign)
+pcaCOR$loadings
 ```
 
 
 According to the outputs above in the part(a), the first two principal combonents for the standardized variables is given as below. 
 
-\[y_{1}^{^}= e^{^}_{1}X=.332X1+.346X2+.339X3+.353X4+.366X5+.370X6+.366X7.354X8 \]
-\[y_{2}^{^}= e^{^}_{2}X=.52X1+.47X2+.345X3-.089X4-.154X5-.295X6-.334X7-.387X8 \]
+\[y_1^{*}= e_1^{*}X=.332X1+.346X2+.339X3+.353X4+.366X5+.370X6+.366X7.354X8 \]
+\[y_2^{*}= e_2^{*}X=.52X1+.47X2+.345X3-.089X4-.154X5-.295X6-.334X7-.387X8 \]
 According to the above results,the total sample variance explained by the first two sample variances is  approximately 91.61% of the total sample variance. approximately  92.34 %  the total sample variance . 
 
 
@@ -438,15 +471,21 @@ Eigenvectors
 ```{r}
 p1 <- princomp(x)  ## using covariance matrix
 summary(p1)
-plot(p1)
 screeplot(p1, npcs=8, type="lines")
 ```
 
+```{r}
+# PCA on covariance matrix (default)
+pcaCOV <- princomp(x=data[,2:9])
+pcsign <- sign(colSums(pcaCOV$loadings^3))
+pcaCOV$loadings <- pcaCOV$loadings %*% diag(pcsign)
+pcaCOV$loadings 
+```
 
 According to the outputs above in the part(a), the first two principal combonents for the standardized variables is given as below. 
 
-\[y_{1}^{^}= e^{^}_{1}X=.224X1+.311X2+.317X3+.278X4+.364X5+.428X6+.421X7+.416X8 \]
-\[y_{2}^{^}= e^{^}_{2}X=.432X1+.523X2+.469X3+.033X4-.062X5-.261X6-.309X7-.386X8 \]
+\[y_1^{*}= e_1^{*}X=.224X1+.311X2+.317X3+.278X4+.364X5+.428X6+.421X7+.416X8 \]
+\[y_2^{*}= e_2^{*}X=.432X1+.523X2+.469X3+.033X4-.062X5-.261X6-.309X7-.386X8 \]
 
 
 According to the above results,the total sample variance explained by the first two sample variances is  approximately 92.06% of the total sample variance. approximately 92.06 % the total sample variance . it can be seen that the all event contributed equally of the first component which might be called as the way index. the second components  contrasts the times for the shorter distance and the longer distance so it can be called as the distance component . this above interpretation of the covariance matrix is similar as the results obtained in Exercise 8.20
@@ -542,7 +581,6 @@ Eigenvectors
 ```{r}
 p1 <- princomp(x, cor = TRUE)  ## using correlation matrix
 summary(p1)
-plot(p1)
 screeplot(p1, npcs=7, type="lines")
 ```
 
@@ -750,18 +788,8 @@ fa.diagram(threefactor)
 
 
 
-```{r}
-#install.packages("nFactors")
-library(nFactors)
-ev <- eigen(cor(data[,1:5])) 
-ap <- parallel(subject=nrow(data[,1:5]),var=ncol(data[,1:5]), rep=100, cent=.05)
-nS <- nScree(x=ev$values, aparallel=ap$eigen$qevpea)
-
-plotnScree(nS)
-```
-
-**factor Analysis using maximum liklihood
-*number of factor is two rotate and non rotate
+## factor Analysis using maximum liklihood
+# number of factor is two rotate and non rotate
 
 
 
@@ -771,13 +799,15 @@ fit.2 <- factanal(data[,1:5],factors=2,rotation="varimax" ,scores = "regression"
 print(fit.2, digits = 2, cutoff = .2, sort = TRUE)
 ```
 ```{r}
-fit <- factanal(cor(data[,1:5]), factors=3,rotation='none')
-print(fit, digits=2, cutoff=.3, sort=TRUE)
+#fit <- factanal(cor(data[,1:5]), factors=3,rotation='none')
+#print(fit, digits=2, cutoff=.3, sort=TRUE)
+cat(blue("Note \n"))
+cat("Error in factanal(cor(data[, 1:5]), factors = 3,) : 3 factors are too many for 5 variables")
 ```
 
 ```{r}
-fit<- factanal(data[,1:5],factors=3,rotation="varimax")
-print(fit, digits=2, cutoff=.3, sort=TRUE)
+#fit<- factanal(data[,1:5],factors=3,rotation="varimax")
+#print(fit, digits=2, cutoff=.3, sort=TRUE)
 ```
 
 
@@ -805,12 +835,15 @@ R22=matrix(c(1,0.4248,.4248,1),ncol=2,byrow=TRUE)
 
 
 
-## a)
+
 
 ```{r}
 # Finding the E1 and E2 matrices:
+cat(red("all the sample canonical correlations and the sample canonical variates. \n\n"))
 E1 <- solve(R11) %*% R12 %*% solve(R22) %*% R21
 E2 <- solve(R22) %*% R21 %*% solve(R11) %*% R12
+E1
+E2
 ```
 
 
@@ -820,6 +853,7 @@ Xeig <- sqrt(eigen(E1)$values)
 Yeig <- sqrt(eigen(E2)$values)
 cat(" ### Canonical Correlation \n")
 Xeig
+Yeig
 ```
 ```{r}
 cat("# The canonical variates are based on the eigenvectors of E1 :\n\n")
@@ -874,16 +908,11 @@ P.value <- pchisq(test.stat, df = my.q1*my.q2, lower.tail=F)
 P.value
 ```
 
-** Since the P-value is tiny, we conclude that there is at least one 
-** nonzero canonical correlation.
+** Since the P-value is tiny, we conclude that there is at least one  nonzero canonical correlation.
 
 ## b
 
 
-
-```{r}
-
-```
 
 
 ```{r}

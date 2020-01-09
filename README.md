@@ -1,5 +1,5 @@
 ## Multivariate Statistics
-This repository contains solution the Homework of Multivariate Analysis Course using R-code  in an R markdown (.Rmd) file.I provide the Homeworks' questions covered  10 chapters in the text book and the solution as the following:
+This repository contains solution the Homeworks of Multivariate Analysis Course using R-code  in an R markdown (.Rmd) file.I provide the Homeworks' questions covered  10 chapters in the text book and the solution as the following:
 
 1. Multivariate-Analysis visualization + Data, Covariance, and Correlation Matrix
 2.univarite and Multivariate Normality Tests
@@ -34,3 +34,34 @@ sudo gdebi rstudio-xenial-1.1.379-amd64.deb
 
 ## The text book 
 Applied Multivariate Statistical Analysis (Classic Version) (6th Edition) (Pearson Modern Classics for Advanced Statistics Series) 6th Edition. 
+
+##The instructor for this course
+Prof [S.Yaser Samadi](https://math.siu.edu/faculty-staff/faculty/samadi.php:)
+
+## Project
+
+I applied most of multivariate statistical methods covered in this course on [Breast Cancer Wisconsin (Diagnostic) Data Set"](https://archive.ics.uci.edu/ml/datasets/Breast+Cancer+Wisconsin+(Diagnostic) where,  
+
+* ID: Sample code number: id number 
+* X1: Clump Thickness: 1 - 10 
+* X2: Uniformity of Cell Size: 1 - 10 
+* X3: Uniformity of Cell Shape: 1 - 10 
+* X4: Marginal Adhesion: 1 - 10 
+* X5: Single Epithelial Cell Size: 1 - 10 
+* X6: Bare Nuclei: 1 - 10 
+* X7: Bland Chromatin: 1 - 10 
+* X8: Normal Nucleoli: 1 - 10 
+* X9: Mitoses: 1 - 10 
+* X10: Class: (2 for benign, 4 for malignant) 
+
+
+I was not able to apply (Two-Way MANOVA) on my dataset, for example, since the dataset has just one independent variable "Class".  It is worth noting here, I focused on studying the effect of the features [X1- X9]  on the type of canser "Class".
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 

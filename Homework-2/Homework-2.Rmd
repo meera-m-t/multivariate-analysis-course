@@ -154,10 +154,12 @@ head(Diabetes)
 x=Diabetes[,3:5]
 ```
 
-
-```{r}
+```{r,include=FALSE}
 library(crayon)
 library(car)
+```
+
+```{r}
 cat(red("Shapiro-Wilk normality test of glutest: \n"))
 shapiro.test( x[,1])$p.value
 cat(red("Shapiro-Wilk normality test of instest: \n"))
